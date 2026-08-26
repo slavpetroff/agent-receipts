@@ -44,6 +44,12 @@ line N".
   `gift/the-real-98-line-map.md` adds the two checks and three rules
   for writing your own.
 
+## The craft (tools you can run yourself)
+
+- `craft/layers_check.py` — the structural 3-layer validator we used
+  on ourselves (see `results/case-study-self-icm-migration.md`).
+  Deterministic, offline: `python3 craft/layers_check.py --repo .`
+
 ## The headline numbers, with their receipts
 
 | claim | receipt |
@@ -52,5 +58,6 @@ line N".
 | Small repos: the map HURTS — +13% (sqlite-vector), +20.6% (dpi-detector) | `results/field-test-v1-RESULT.md` + `logs/field-test-v1/` |
 | Cheap iteration: the layer did NOT pay — +7.5% cost per solved task, 36/36 cells | `results/v3-failtopass-RESULT.md` |
 | Where routing pays: breadth ≥ ~10 areas, no cheap feedback loop | the pattern table in `results/field-test-v1-RESULT.md` |
+| Fusing ICM layers costs 8.6× boot tax: 18,090 → 2,100 tokens/session after the 3-layer split (SELF-RUN, disclosed) | `results/case-study-self-icm-migration.md` + `craft/layers_check.py` |
 
 If a number I post is not in here, call it out.
