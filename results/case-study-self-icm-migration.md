@@ -57,6 +57,27 @@ that was already reasonably split gained 1.2×. If your root context
 file is thin and routes properly, this migration buys you structure,
 not tokens — and we'd tell you that before you pay for anything.
 
+## The loss that came with it (published the same day)
+
+We then measured the SAME 3-layer split on one-shot navigation runs
+(same 6 tasks, same agent, same judge as our earlier A/B):
+
+| arm | correct | tokens |
+|---|---|---|
+| flat thin catalog (v1) | 6/6 | 147,467 |
+| fat catalog (v2) | 6/6 | 174k |
+| **3-layer split (v3)** | 6/6 | **231,032 (+56.7% vs v1)** |
+
+The mechanism, visible in the logs: the hop tax. A one-shot agent
+swallows a flat 95-line catalog in one read; the 3-layer split makes
+it pay shim → map → router → workspace on every task.
+
+**So the two-regime law, measured:** always-loaded interactive
+sessions → the 3-layer split wins (8.6× boot cut). One-shot batch
+runs → the flat thin catalog wins (+56.7% against the split). The
+architecture must match how your agents actually consume the layer —
+and anyone selling you one shape for both regimes hasn't measured.
+
 ## The honest limits
 
 - Self-run: the operator who built the layer also fixed it.

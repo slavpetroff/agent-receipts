@@ -59,5 +59,6 @@ line N".
 | Cheap iteration: the layer did NOT pay — +7.5% cost per solved task, 36/36 cells | `results/v3-failtopass-RESULT.md` |
 | Where routing pays: breadth ≥ ~10 areas, no cheap feedback loop | the pattern table in `results/field-test-v1-RESULT.md` |
 | Fusing ICM layers costs 8.6× boot tax: 18,090 → 2,100 tokens/session after the 3-layer split (SELF-RUN, disclosed) | `results/case-study-self-icm-migration.md` + `craft/layers_check.py` |
+| The same 3-layer split LOSES on one-shot navigation: +56.7% vs a flat thin catalog (the hop tax) — the consumption regime picks the architecture | `results/case-study-self-icm-migration.md` (the loss section) + `logs/field-test-v3/` |
 
 If a number I post is not in here, call it out.
