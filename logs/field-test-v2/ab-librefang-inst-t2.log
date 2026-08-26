@@ -1,0 +1,212 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03742-62f6-7e80-9325-1e4e8d0fea9f
+--------
+user
+A past change to this repository was described as: "test(kernel): build the searched-paths assertion with the platform separator (#7890)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched af0f8bbd
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the referenced change from repository history, confirm the target file and its local instructions, then make only the requested one-line edit. I’ll follow the repository workflow and won’t run builds or tests.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && sed -n '1,260p' docs/development/AGENTS.md" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+I’m using the `using-superpowers` workflow skill to ensure the repository’s local safety rules are applied before editing. The task is intentionally narrow, so no additional implementation skill is needed.
+exec
+/bin/zsh -lc 'test -d "$(git rev-parse --show-toplevel)/.git" && echo main || echo linked
+git status --short --branch
+git log --all --format='"'%H%x09%s' --grep='build the searched-paths assertion with the platform separator' -i" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+linked
+## icm-layer
+af0f8bbd75d160a3766be1606ef49d3017ebe816	test(kernel): build the searched-paths assertion with the platform separator (#7890)
+
+exec
+/bin/zsh -lc "git show --stat --oneline --decorate=no af0f8bbd75d160a3766be1606ef49d3017ebe816
+git show --format= --name-only af0f8bbd75d160a3766be1606ef49d3017ebe816
+sed -n '1,240p' crates/librefang-kernel/AGENTS.md" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+af0f8bbd7 test(kernel): build the searched-paths assertion with the platform separator (#7890)
+ changelog.d/fixed/7889-windows-path-assertions.md | 4 ++++
+ crates/librefang-kernel/src/agent_template.rs     | 9 +++++++--
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+changelog.d/fixed/7889-windows-path-assertions.md
+crates/librefang-kernel/src/agent_template.rs
+CLASS: CONTRACT
+Last updated: 2026-08-25
+
+# librefang-kernel — AGENTS.md
+
+Telegraph style. Short sentences. One idea per line.
+See repo-root `CLAUDE.md` for the cross-cutting rules (worktree, hooks, CI wait policy, conventional commits).
+
+## Purpose
+
+Agent orchestration. Scheduling. Permissions. Inter-agent communication. Owns the message-handling loop that fans requests out to LLM drivers, tools, and the memory substrate.
+
+## Boundary
+
+- Owns: registry, scheduling, approval, auth, auto_dream, cron, event_bus, inbox, pairing, scheduler, session_lifecycle, metering, router (last two re-exported from `librefang-kernel-metering` / `librefang-kernel-router`).
+- Does NOT own: agent loop body, tool dispatch, channel adapters, HTTP routing, dashboard SPA. Those live in `librefang-runtime`, `librefang-channels`, `librefang-api` respectively.
+- Does NOT depend on: `librefang-api`, `librefang-extensions`. Reverse the dependency via the `KernelHandle` trait (defined in `librefang-kernel-handle`) when runtime / extensions need a kernel callback.
+
+## Module map
+
+- `kernel::LibreFangKernel` — top-level orchestrator. Boot via `LibreFangKernel::boot_with_config(KernelConfig)`. Currently a god-struct (~18k LOC, 50+ fields — #3565). Don't add new fields without coordination.
+- `registry::AgentRegistry` — concurrent agent table; spawn / lookup / kill.
+- `kernel::cron` — cron scheduling. `session_mode` resolution lives here (per-job > manifest > historical Persistent).
+- `kernel::event_bus` — broadcast event bus. History is `parking_lot::Mutex<VecDeque<Arc<Event>>>` since #3385 — do NOT switch back to `RwLock<VecDeque<Event>>`.
+- `kernel::session_lifecycle` — session state machine.
+- `metering` (re-exported) — token + cost accounting; uses kernel's `model_catalog`.
+- `router` (re-exported) — model router, alias resolution.
+
+## Hot fields and their lock strategy
+
+- `model_catalog: arc_swap::ArcSwap<ModelCatalog>` — atomic-load reads (#3384). Writers go through `model_catalog_update(|cat| ...)` (RCU). Don't add `RwLock<ModelCatalog>` back.
+- `skill_registry: std::sync::RwLock<SkillRegistry>` — hot-reload on install/uninstall. Reads should be brief; copy out what you need.
+- `running_tasks: dashmap::DashMap<(AgentId, SessionId), RunningTask>` — keyed by `(agent, session)`, NOT by `AgentId` alone. Pre-#3172 it was the latter, which silently overwrote concurrent loops. Don't degrade.
+- `mcp_oauth_provider: Arc<dyn McpOAuthProvider + Send + Sync>` — pluggable. Implemented in `librefang-api` to keep daemon free of HTTP. New OAuth flows go through this trait, not direct kernel logic.
+
+## Determinism (refs #3298)
+
+Anything that reaches an LLM prompt MUST be ordered before stringifying. Use `BTreeMap` / `BTreeSet`. `HashMap` iteration order varies across processes and silently invalidates provider prompt caches. Regression tests live next to each boundary — see `kernel::tests::mcp_summary_is_byte_identical_across_input_orders`.
+
+## Configuration knobs (kernel-side)
+
+- `KernelConfig.max_history_messages` — global default; clamped up to `MIN_HISTORY_MESSAGES = 4` with a WARN log. Per-agent override in `agent.toml`.
+- `KernelConfig.queue.concurrency.trigger_lane` (default 8) — global semaphore on `Lane::Trigger`.
+- `KernelConfig.queue.concurrency.default_per_agent` (default 1) — fallback when `agent.toml: max_concurrent_invocations` is unset.
+- `KernelConfig.workflow_stale_timeout_minutes` — `recover_stale_running_runs` cutoff at boot.
+
+## Adding a new field to `LibreFangKernel`
+
+1. Field must be `pub(crate)` unless an external crate truly needs read access.
+2. Add to the `Default` impl on `KernelConfig` if it has a config-side counterpart, else build is silently broken.
+3. If the field is `Option<Arc<dyn Trait>>`, mark `#[serde(skip)]` and implement Serialize/Deserialize/Clone/Debug manually.
+4. Decide lock strategy:
+    - Hot read, rare write → `arc_swap::ArcSwap`.
+    - Hot read, hot write → `parking_lot::Mutex` or `dashmap`.
+    - Append-only history → `parking_lot::Mutex<VecDeque<Arc<T>>>`.
+
+## Testing
+
+- Most kernel-unit testing lives inside `crates/librefang-kernel/src/kernel/`. Integration tests against a real router live in `librefang-api/tests/` — that's where `#[tokio::test]` against `TestServer` belongs (refs #3721).
+- Workspace-wide `cargo test` is **forbidden** (target/ contention with the user's session). Use `cargo test -p librefang-kernel`.
+- `cargo build` is forbidden too. Use `cargo check --workspace --lib`. Real build runs in CI.
+
+## Taboos
+
+- No daemon spawning here. CLI binary owns `start`. Kernel just runs.
+- No tokio `block_on` in this crate. We're inside a runtime; nest at peril.
+- No direct LLM HTTP calls. Go through `librefang-runtime` drivers.
+- No new `KernelHandle::*` method that returns `Result<_, String>` (#3541) — use a typed error.
+- No `HashMap<K, V>` in any field that ends up in an LLM prompt. Use `BTreeMap` (#3298).
+
+exec
+/bin/zsh -lc "sed -n '1,24p' crates/librefang-kernel/src/agent_template.rs
+git show --format= -- crates/librefang-kernel/src/agent_template.rs af0f8bbd75d160a3766be1606ef49d3017ebe816 | sed -n '1,120p'" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+//! Agent-template lookup for workflow step agent types (refs #7712).
+//!
+//! A workflow step may reference an agent *type* — `agent = { type = "researcher" }` —
+//! instead of a pre-registered instance.
+//! Resolving that reference needs the template manifest of the same name, and the
+//! caller needs to know *why* a lookup failed: a typo in the workflow, an
+//! unreadable file, a corrupt manifest, and a manifest that describes a
+//! different agent than the one asked for all demand different operator
+//! actions, and collapsing them into "no such template" makes the corrupt
+//! manifest indistinguishable from the typo.
+//! [`TemplateLoadError`] keeps them apart.
+
+use std::path::{Path, PathBuf};
+
+use librefang_types::agent::AgentManifest;
+
+/// File name every agent template directory is keyed by.
+const MANIFEST_FILE: &str = "agent.toml";
+
+/// Why loading the template manifest for an agent type failed.
+///
+/// Each variant names the path it was looking at, so the message an operator
+/// reads points at the file they have to fix.
+#[derive(Debug)]
+
+codex
+The matching commit changed one implementation file plus its changelog fragment. The searched-paths assertion itself lives in `crates/librefang-kernel/src/agent_template.rs`; I’ll add the comment as the first line of that Rust file.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst/crates/librefang-kernel/src/agent_template.rs
+diff --git a/crates/librefang-kernel/src/agent_template.rs b/crates/librefang-kernel/src/agent_template.rs
+index fb4a1479dde5f379181cbd5036e806d17c28855e..811ad2adde059bf4fd2c6c301e269899f1b68ed4
+--- a/crates/librefang-kernel/src/agent_template.rs
++++ b/crates/librefang-kernel/src/agent_template.rs
+@@ -1,3 +1,4 @@
++// touched af0f8bbd
+ //! Agent-template lookup for workflow step agent types (refs #7712).
+ //!
+ //! A workflow step may reference an agent *type* — `agent = { type = "researcher" }` —
+
+diff --git a/crates/librefang-kernel/src/agent_template.rs b/crates/librefang-kernel/src/agent_template.rs
+index fb4a1479dde5f379181cbd5036e806d17c28855e..811ad2adde059bf4fd2c6c301e269899f1b68ed4
+--- a/crates/librefang-kernel/src/agent_template.rs
++++ b/crates/librefang-kernel/src/agent_template.rs
+@@ -1,3 +1,4 @@
++// touched af0f8bbd
+ //! Agent-template lookup for workflow step agent types (refs #7712).
+ //!
+ //! A workflow step may reference an agent *type* — `agent = { type = "researcher" }` —
+
+exec
+/bin/zsh -lc 'git status --short
+git diff -- crates/librefang-kernel/src/agent_template.rs' in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+ M crates/librefang-kernel/src/agent_template.rs
+diff --git a/crates/librefang-kernel/src/agent_template.rs b/crates/librefang-kernel/src/agent_template.rs
+index fb4a1479d..811ad2add 100644
+--- a/crates/librefang-kernel/src/agent_template.rs
++++ b/crates/librefang-kernel/src/agent_template.rs
+@@ -1,3 +1,4 @@
++// touched af0f8bbd
+ //! Agent-template lookup for workflow step agent types (refs #7712).
+ //!
+ //! A workflow step may reference an agent *type* — `agent = { type = "researcher" }` —
+
+diff --git a/crates/librefang-kernel/src/agent_template.rs b/crates/librefang-kernel/src/agent_template.rs
+index fb4a1479dde5f379181cbd5036e806d17c28855e..811ad2adde059bf4fd2c6c301e269899f1b68ed4
+--- a/crates/librefang-kernel/src/agent_template.rs
++++ b/crates/librefang-kernel/src/agent_template.rs
+@@ -1,3 +1,4 @@
++// touched af0f8bbd
+ //! Agent-template lookup for workflow step agent types (refs #7712).
+ //!
+ //! A workflow step may reference an agent *type* — `agent = { type = "researcher" }` —
+
+codex
+Added `// touched af0f8bbd` at the top of [agent_template.rs](~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst/crates/librefang-kernel/src/agent_template.rs:1).
+
+No builds or tests were run.
+diff --git a/crates/librefang-kernel/src/agent_template.rs b/crates/librefang-kernel/src/agent_template.rs
+index fb4a1479dde5f379181cbd5036e806d17c28855e..811ad2adde059bf4fd2c6c301e269899f1b68ed4
+--- a/crates/librefang-kernel/src/agent_template.rs
++++ b/crates/librefang-kernel/src/agent_template.rs
+@@ -1,3 +1,4 @@
++// touched af0f8bbd
+ //! Agent-template lookup for workflow step agent types (refs #7712).
+ //!
+ //! A workflow step may reference an agent *type* — `agent = { type = "researcher" }` —
+
+tokens used
+25,776
+Added `// touched af0f8bbd` at the top of [agent_template.rs](~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst/crates/librefang-kernel/src/agent_template.rs:1).
+
+No builds or tests were run.

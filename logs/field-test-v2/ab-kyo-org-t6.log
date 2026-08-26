@@ -1,0 +1,218 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field2/kyo/.worktrees/org
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a0374f-28aa-7c90-b0d9-99edb7f33086
+--------
+user
+A past change to this repository was described as: "[kyo-ui] SPA local mount fired form onSubmit twice on a submit-button click (#1785)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 68f74819
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m locating the historical change and will make only the requested one-line comment. I’ll follow the repository’s required skill guidance, and I won’t run builds or tests.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && sed -n '1,220p' CONTRIBUTING.md && git log --all --oneline --grep='SPA local mount fired form onSubmit twice on a submit-button click'" in ~/Projects/agentops-bench-work/field2/kyo/.worktrees/org
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc 'git show --format= --name-only 68f748199 && git status --short' in ~/Projects/agentops-bench-work/field2/kyo/.worktrees/org
+ succeeded in 0ms:
+kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+kyo-ui/shared/src/test/scala/kyo/FormValidationScenarioItTest.scala
+
+exec
+/bin/zsh -lc "git show --format= --stat 68f748199 && git show --format= -- kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala kyo-ui/shared/src/test/scala/kyo/FormValidationScenarioItTest.scala | sed -n '1,240p'" in ~/Projects/agentops-bench-work/field2/kyo/.worktrees/org
+ succeeded in 0ms:
+ .../src/main/scala/kyo/internal/DomBackend.scala   | 22 ++++++++++++++++------
+ .../scala/kyo/FormValidationScenarioItTest.scala   | 20 ++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 6 deletions(-)
+
+exec
+/bin/zsh -lc "git show --format= 68f748199 -- kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala kyo-ui/shared/src/test/scala/kyo/FormValidationScenarioItTest.scala | sed -n '1,260p'; sed -n '1,20p' kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala; sed -n '1,20p' kyo-ui/shared/src/test/scala/kyo/FormValidationScenarioItTest.scala" in ~/Projects/agentops-bench-work/field2/kyo/.worktrees/org
+ succeeded in 0ms:
+diff --git a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+index 4572b3408..85aee6dac 100644
+--- a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
++++ b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+@@ -257,6 +257,11 @@ private[kyo] object DomBackend:
+         final class ChainTypes(target: dom.Element):
+             def contains(t: String): Boolean = declaredInChain(target, t)
+ 
++        // A submit button's click makes the browser fire a native `submit` right after, but the Click dispatch
++        // already emulates onSubmit; this flag (set on Click, cleared on a 0-timeout) suppresses that one
++        // following native submit so the form handler runs once. Mirrors clientJs's `_kyoClickSubmit` guard.
++        var clickSubmitGuard = false
++
+         val handler: scalajs.js.Function1[dom.Event, Unit] = (e: dom.Event) =>
+             findPathElement(e.target.asInstanceOf[dom.Element]).foreach { target =>
+                 val path    = parsePath(target.getAttribute("data-kyo-path"))
+@@ -277,6 +282,8 @@ private[kyo] object DomBackend:
+                         // is handled by UILocation's interceptor. Prevent-defaulting every anchor here
+                         // would also kill those.
+                         if target.tagName.toLowerCase == "a" && evTypes.contains("click") then e.preventDefault()
++                        clickSubmitGuard = true
++                        discard(dom.window.setTimeout(() => clickSubmitGuard = false, 0))
+                         Present(UIEvent.Click(path, mouse))
+                     else if t == "input" && evTypes.contains("input") then
+                         Present(UIEvent.Input(path, e.target.asInstanceOf[dom.html.Input].value))
+@@ -303,12 +310,15 @@ private[kyo] object DomBackend:
+                         end if
+                     else if t == "submit" && evTypes.contains("submit") then
+                         e.preventDefault()
+-                        val submitTargetId = Maybe(e.target.asInstanceOf[dom.Element].id).filter(_.nonEmpty)
+-                        val submitMouse = MouseEventData(
+-                            modifiers = UI.Modifiers.none,
+-                            targetId = submitTargetId
+-                        )
+-                        Present(UIEvent.Submit(path, submitMouse))
++                        if clickSubmitGuard then Absent
++                        else
++                            val submitTargetId = Maybe(e.target.asInstanceOf[dom.Element].id).filter(_.nonEmpty)
++                            val submitMouse = MouseEventData(
++                                modifiers = UI.Modifiers.none,
++                                targetId = submitTargetId
++                            )
++                            Present(UIEvent.Submit(path, submitMouse))
++                        end if
+                     else if t == "keydown" && evTypes.contains("keydown") then
+                         val ke         = e.asInstanceOf[dom.KeyboardEvent]
+                         val kdTargetId = Maybe(ke.target.asInstanceOf[dom.Element].id).filter(_.nonEmpty)
+diff --git a/kyo-ui/shared/src/test/scala/kyo/FormValidationScenarioItTest.scala b/kyo-ui/shared/src/test/scala/kyo/FormValidationScenarioItTest.scala
+index d26c4b195..88a4a08fe 100644
+--- a/kyo-ui/shared/src/test/scala/kyo/FormValidationScenarioItTest.scala
++++ b/kyo-ui/shared/src/test/scala/kyo/FormValidationScenarioItTest.scala
+@@ -286,4 +286,24 @@ class FormValidationScenarioItTest extends UITest:
+         }
+     }
+ 
++    "clicking a submit button runs onSubmit exactly once (no click+native-submit double dispatch)" in {
++        val app: UI < Async =
++            for
++                count <- Signal.initRef(0)
++            yield UI.div(
++                UI.form.id("f").onSubmit(count.updateAndGet(_ + 1).unit)(
++                    UI.input.id("name"),
++                    UI.button("Submit").id("sub")
++                ),
++                count.map(v => UI.span(s"count:$v").id("c"))
++            )
++        withUI(app) {
++            for
++                _ <- Browser.click(Selector.id("sub"))
++                // Regression guard for DomBackend's clickSubmitGuard: the click+native-submit pair fires onSubmit once.
++                _ <- Browser.assertText(Selector.id("c"), "count:1")
++            yield ()
++        }
++    }
++
+ end FormValidationScenarioItTest
+package kyo.internal
+
+import kyo.*
+import org.scalajs.dom
+import org.scalajs.dom.document
+import scala.annotation.tailrec
+import scala.scalajs.js
+
+/** Scala.js UI backend. Mounts a UI into the browser DOM. */
+private[kyo] object DomBackend:
+
+    /** One seeded `data-kyo-focus-auto` element and where focus should go when it leaves the document.
+      *
+      * @param path
+      *   `data-kyo-path` of the seeded element
+      * @param returnTo
+      *   `data-kyo-path` of the element focused just before seeding, `Absent` when nothing was focused
+      * @param restore
+      *   whether the seeded element declared `data-kyo-focus-restore`
+      */
+package kyo
+
+import kyo.Browser.*
+
+class FormValidationScenarioItTest extends UITest:
+
+    "submit empty shows first validation error" in {
+        val app: UI < Async =
+            for
+                name  <- Signal.initRef("")
+                email <- Signal.initRef("")
+                error <- Signal.initRef("")
+            yield UI.div(
+                UI.form.id("f").onSubmit {
+                    for
+                        n <- name.get
+                        e <- email.get
+                        _ <-
+                            if n.isEmpty then error.set("Name required")
+                            else if e.isEmpty then error.set("Email required")
+
+codex
+The commit contains one implementation file and its regression test. The behavior change itself lives in `DomBackend.scala`, so I’m adding the marker only there.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/kyo/.worktrees/org/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+diff --git a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+index 5a9328e2e626f4cc4963cc79401bf35515d3ed3a..3568f28b781ce4b2a770c6724098a4568f24a8d0
+--- a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
++++ b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+@@ -1,3 +1,4 @@
++// touched 68f74819
+ package kyo.internal
+ 
+ import kyo.*
+
+diff --git a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+index 5a9328e2e626f4cc4963cc79401bf35515d3ed3a..3568f28b781ce4b2a770c6724098a4568f24a8d0
+--- a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
++++ b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+@@ -1,3 +1,4 @@
++// touched 68f74819
+ package kyo.internal
+ 
+ import kyo.*
+
+exec
+/bin/zsh -lc 'git diff -- kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala && git status --short' in ~/Projects/agentops-bench-work/field2/kyo/.worktrees/org
+ succeeded in 0ms:
+diff --git a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+index 5a9328e2e..3568f28b7 100644
+--- a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
++++ b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+@@ -1,3 +1,4 @@
++// touched 68f74819
+ package kyo.internal
+ 
+ import kyo.*
+ M kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+
+diff --git a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+index 5a9328e2e626f4cc4963cc79401bf35515d3ed3a..3568f28b781ce4b2a770c6724098a4568f24a8d0
+--- a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
++++ b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+@@ -1,3 +1,4 @@
++// touched 68f74819
+ package kyo.internal
+ 
+ import kyo.*
+
+codex
+Added `// touched 68f74819` to the top of [DomBackend.scala](~/Projects/agentops-bench-work/field2/kyo/.worktrees/org/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala:1). No builds or tests run.
+diff --git a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+index 5a9328e2e626f4cc4963cc79401bf35515d3ed3a..3568f28b781ce4b2a770c6724098a4568f24a8d0
+--- a/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
++++ b/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala
+@@ -1,3 +1,4 @@
++// touched 68f74819
+ package kyo.internal
+ 
+ import kyo.*
+
+tokens used
+25,639
+Added `// touched 68f74819` to the top of [DomBackend.scala](~/Projects/agentops-bench-work/field2/kyo/.worktrees/org/kyo-ui/js-wasm/src/main/scala/kyo/internal/DomBackend.scala:1). No builds or tests run.

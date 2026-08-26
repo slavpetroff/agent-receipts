@@ -1,0 +1,195 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03744-e690-7e51-97a4-b72dd8b90ff6
+--------
+user
+A past change to this repository was described as: "feat(media): make transcription and image understanding declarable capabilities (#7824)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched ba681047
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the change from repository history, confirm the target file, then make exactly the requested one-line edit. I’m using the repository workflow guidance and the required skill-routing instructions; I will not run builds or tests.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && sed -n '1,260p' docs/development/AGENTS.md" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc 'test -d "$(git rev-parse --show-toplevel)/.git" && echo main || echo linked
+git status --short --branch
+git log --all --oneline --decorate --grep='"'feat(media): make transcription and image understanding declarable capabilities' -n 10" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 22ms:
+exec
+/bin/zsh -lc 'git show --stat --oneline --format=fuller ba6810472
+git show --name-only --format= ba6810472' in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+commit ba6810472
+Author:     Crocopaco <paco.j.navarrete@gmail.com>
+AuthorDate: Mon Aug 24 13:39:07 2026 +0200
+Commit:     GitHub <noreply@github.com>
+CommitDate: Mon Aug 24 20:39:07 2026 +0900
+
+    feat(media): make transcription and image understanding declarable capabilities (#7824)
+    
+    * feat(media): make transcription and image understanding real capabilities
+    
+    `MediaCapability` covered only the generation side, so the two understanding
+    capabilities had nowhere to be declared. The consequence was structural: a
+    provider that transcribes or describes could not be discovered from the
+    registry the way every generating provider is, and was instead picked from a
+    hardcoded env-var cascade in `media_understanding.rs` — outside the catalog,
+    with no fallback, and invisible to `GET /api/media/providers`.
+    
+    Adds `SpeechToText` and `ImageUnderstanding` so both can be declared in a
+    provider's `media_capabilities` like any other, which is the prerequisite for
+    routing a capability the agent's own model lacks to a provider that has it.
+    
+    * docs(changelog): fragment for the media understanding capabilities
+
+ changelog.d/added/7823-media-understanding-capabilities.md |  3 +++
+ crates/librefang-types/src/media.rs                        | 12 ++++++++++++
+ 2 files changed, 15 insertions(+)
+changelog.d/added/7823-media-understanding-capabilities.md
+crates/librefang-types/src/media.rs
+
+codex
+The matching commit is `ba6810472`. It contains one implementation file plus a changelog fragment; the change itself lives in `crates/librefang-types/src/media.rs`, so I’m applying the comment there only.
+exec
+/bin/zsh -lc "sed -n '1,220p' crates/librefang-types/AGENTS.md
+sed -n '1,24p' crates/librefang-types/src/media.rs" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-25
+
+# librefang-types — AGENTS.md
+
+## Purpose
+
+The schema spine. Shared data structures used across the kernel, runtime, memory substrate, and wire protocol.
+**Contains no business logic.** Pure types + small derive-only helpers.
+
+## Boundary
+
+- Owns: every cross-crate type — agent, approval, capability, comms, config, error, event, goal, i18n, manifest_signing, media, memory, message, model_catalog, oauth, registry_schema, scheduler, serde_compat, subagent, taint, tool, tool_class.
+- Does NOT own: implementation. Functions that *do* something belong in the crate that uses the type, not here.
+- Depends on: `serde`, `serde_json`, `chrono`, `uuid`, `thiserror`, `dirs`, `toml`, `schemars`, `utoipa`. **No** workspace crate. We're at the bottom of the dep DAG.
+
+## Schema-mirror invariant (refs #3144 → #3162 → #3167)
+
+`librefang-types` defines the schema, but the golden-file guard (`kernel_config_schema_matches_golden_fixture`) lives in `librefang-api`. Any change to a `KernelConfig` field — addition, rename, type change — requires regenerating the golden fixture in api/tests.
+
+CI catches this via the changed-lanes rule: a `librefang-types`-only PR auto-pulls `librefang-api` into the affected test set. Don't try to defeat that rule; it exists for a reason.
+
+## Adding a new type
+
+1. Place under the matching submodule. New module = decide if it's truly a cross-crate type or belongs in the consuming crate.
+2. Derive the standard quartet: `Debug`, `Clone`, `Serialize`, `Deserialize`. Add `PartialEq` / `Eq` / `Hash` only when needed downstream.
+3. For OpenAPI surface types: also derive `utoipa::ToSchema`.
+4. For configuration types: also derive `schemars::JsonSchema` (driven by the kernel-config golden fixture).
+5. Use `BTreeMap` / `BTreeSet` instead of `HashMap` / `HashSet` for any field that ends up in an LLM prompt (refs #3298).
+
+## Configuration field ritual
+
+When adding a field to a config struct:
+
+1. Add field with `#[serde(default)]` for forward-compat with old TOML.
+2. Add to the `Default` impl. Build silently breaks otherwise.
+3. Add a doc comment — `schemars` surfaces it as the field's `description` in the JSON Schema.
+4. Re-run the kernel-config golden in `librefang-api` (CI will fail otherwise).
+
+## Error types
+
+This crate exports `LibreFangError` and friends. Per #3541 / #3711 we are migrating away from `Result<_, String>` and `anyhow::Error` in trait boundaries — new error variants belong here, not as ad-hoc `String`s in consumer crates.
+
+When adding a new variant: preserve the `source()` chain (#3745). `#[from]` on a wrapped enum is the standard idiom.
+
+## Public API surface
+
+- `VERSION: &str` — workspace version, set at compile time from `CARGO_PKG_VERSION`.
+- All modules listed above.
+
+## Taboos
+
+- No `tokio` here. Sync types only.
+- No `reqwest` here. Wire types are data-only; HTTP code lives in consumers.
+- No `librefang-*` imports. We're the bottom of the DAG; reverse the dependency.
+- No implementation. If you find yourself writing a function body longer than 5 lines, it probably belongs in a consumer crate.
+- No `HashMap<K, V>` for prompt-bound types (#3298).
+- No silently dropping a serde field. `#[serde(default)]` or fail at compile-time.
+//! Media understanding types — shared data structures for media processing.
+
+use serde::{Deserialize, Serialize};
+
+/// Supported media types for understanding.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
+pub enum MediaType {
+    Image,
+    Audio,
+    Video,
+}
+
+impl std::fmt::Display for MediaType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MediaType::Image => write!(f, "image"),
+            MediaType::Audio => write!(f, "audio"),
+            MediaType::Video => write!(f, "video"),
+        }
+    }
+}
+
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst/crates/librefang-types/src/media.rs
+diff --git a/crates/librefang-types/src/media.rs b/crates/librefang-types/src/media.rs
+index 043d4614f2c26adc821f8b904ab4eee90b259229..2b585a848a19debb8289b4f10d6ff92bb7d24fbf
+--- a/crates/librefang-types/src/media.rs
++++ b/crates/librefang-types/src/media.rs
+@@ -1,3 +1,4 @@
++// touched ba681047
+ //! Media understanding types — shared data structures for media processing.
+ 
+ use serde::{Deserialize, Serialize};
+
+diff --git a/crates/librefang-types/src/media.rs b/crates/librefang-types/src/media.rs
+index 043d4614f2c26adc821f8b904ab4eee90b259229..2b585a848a19debb8289b4f10d6ff92bb7d24fbf
+--- a/crates/librefang-types/src/media.rs
++++ b/crates/librefang-types/src/media.rs
+@@ -1,3 +1,4 @@
++// touched ba681047
+ //! Media understanding types — shared data structures for media processing.
+ 
+ use serde::{Deserialize, Serialize};
+
+codex
+The one-line comment is in place. I’m using the completion-verification guidance now to inspect only the resulting diff; this is not a build or test.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/verification-before-completion/SKILL.md
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+Added `// touched ba681047` at the top of [media.rs](~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst/crates/librefang-types/src/media.rs:1).
+
+No builds or tests were run. Only that file was edited.
+diff --git a/crates/librefang-types/src/media.rs b/crates/librefang-types/src/media.rs
+index 043d4614f2c26adc821f8b904ab4eee90b259229..2b585a848a19debb8289b4f10d6ff92bb7d24fbf
+--- a/crates/librefang-types/src/media.rs
++++ b/crates/librefang-types/src/media.rs
+@@ -1,3 +1,4 @@
++// touched ba681047
+ //! Media understanding types — shared data structures for media processing.
+ 
+ use serde::{Deserialize, Serialize};
+
+tokens used
+20,701
+Added `// touched ba681047` at the top of [media.rs](~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst/crates/librefang-types/src/media.rs:1).
+
+No builds or tests were run. Only that file was edited.

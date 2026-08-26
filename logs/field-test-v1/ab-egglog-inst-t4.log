@@ -1,0 +1,342 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a0359b-a426-73c2-85b3-b6df4aa0029d
+--------
+user
+A past change to this repository was described as: "Remove redundant check_facts coverage"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched aee6b977
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m locating the historical change and will make exactly one comment-only edit; I’ll skip builds and tests as requested. I’m also loading the repository workflow guidance and the required session skill before touching files.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && sed -n '1,240p' .github/AGENTS.md && git status --short && git log --all --oneline --grep='Remove redundant check_facts coverage'" in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+The matching commit is `aee6b977`. The required session skill only affects workflow discovery here; it does not add any extra edits. I’m now identifying the commit’s sole changed file and checking its opening syntax before applying the exact line.
+exec
+/bin/zsh -lc 'git show --stat --oneline --no-renames aee6b977 && git diff-tree --no-commit-id --name-only -r aee6b977' in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 0ms:
+aee6b977 Remove redundant check_facts coverage
+ .github/workflows/build.yml      |  1 -
+ benches/rust_api_benchmarking.rs | 31 ------------------------------
+ tests/integration_test.rs        | 41 ++--------------------------------------
+ 3 files changed, 2 insertions(+), 71 deletions(-)
+.github/workflows/build.yml
+benches/rust_api_benchmarking.rs
+tests/integration_test.rs
+
+exec
+/bin/zsh -lc 'git show --format=fuller --no-ext-diff --unified=20 aee6b977 -- .github/workflows/build.yml benches/rust_api_benchmarking.rs tests/integration_test.rs' in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 0ms:
+commit aee6b977b00515324d91fb9c6573918c1dc9939b
+Author:     Saul Shanabrook <s.shanabrook@gmail.com>
+AuthorDate: Fri Aug 14 10:28:46 2026 -0400
+Commit:     Saul Shanabrook <s.shanabrook@gmail.com>
+CommitDate: Fri Aug 14 10:28:46 2026 -0400
+
+    Remove redundant check_facts coverage
+
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index 864f4025..334b8737 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -79,41 +79,40 @@ jobs:
+         benchmark:
+           - math-microbenchmark
+           - cykjson
+           - eggcc-extraction
+           - extract-vec-bench
+           - herbie
+           - python_array_optimize
+           - repro-665-set-union
+           - stresstest_large_expr
+           - typeinfer
+           - taylor51
+           - luminal-llama
+           - conv1d_32
+           - conv1d_128
+           - rectangle
+           - proof_testing_eqsat-basic
+           - proof_testing_unify
+           - proof_testing_typecheck
+           - eggcc-2mm
+           - rust_rule_fib
+-          - check_facts_many_matches
+           - rust_rule_match_overhead
+           - rust_rule_match_with_serialize
+           - rust_rule_insert_loop
+           - rust_rule_tableaction_hot_path
+           - factoring-multisets
+           # CodSpeed filters by substring; `math` would also run
+           # `math-microbenchmark` and `proof_testing_math`.
+           - math_normal
+           - proof_testing_math
+     steps:
+       - run: echo "CARGO_INCREMENTAL=0" >> "$GITHUB_ENV"
+       - uses: actions/checkout@v4
+         with:
+           ref: ${{ github.event_name == 'issue_comment' && format('refs/pull/{0}/merge', github.event.issue.number) || github.ref }}
+       - uses: taiki-e/install-action@v2
+         with:
+           tool: cargo-codspeed@4.0.1
+       - uses: Swatinem/rust-cache@v2
+       - run: cargo codspeed build
+       - uses: CodSpeedHQ/action@v4
+diff --git a/benches/rust_api_benchmarking.rs b/benches/rust_api_benchmarking.rs
+index a029f7e6..b05293a2 100644
+--- a/benches/rust_api_benchmarking.rs
++++ b/benches/rust_api_benchmarking.rs
+@@ -1,69 +1,38 @@
+ #[derive(Clone, Copy)]
+ struct RustRuleBenchCase {
+     n_facts_input: Option<usize>,
+     n_rule_run_estimated: Option<usize>,
+ }
+ 
+ impl std::fmt::Display for RustRuleBenchCase {
+     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+         // write!(f, "rust_rule_facts{}", self.n_facts_input.unwrap_or(0))
+         write!(f, "rule_run_{}", self.n_rule_run_estimated.unwrap_or(0))
+     }
+ }
+ 
+ struct RustRuleBenchInput {
+     egraph: egglog::EGraph,
+     ruleset: String,
+ }
+ 
+-struct CheckFactsBenchInput {
+-    egraph: egglog::EGraph,
+-    check: Vec<egglog::ast::Command>,
+-}
+-
+-fn check_facts_many_matches_setup() -> CheckFactsBenchInput {
+-    use std::fmt::Write;
+-
+-    let mut program = String::from("(relation Candidate (i64))\n");
+-    for i in 0..500_000 {
+-        writeln!(&mut program, "(Candidate {i})").unwrap();
+-    }
+-
+-    let mut egraph = egglog::EGraph::new(1);
+-    egraph.parse_and_run_program(None, &program).unwrap();
+-    let check = egraph.parse_program(None, "(check (Candidate x))").unwrap();
+-    CheckFactsBenchInput { egraph, check }
+-}
+-
+-#[divan::bench(sample_count = 20, sample_size = 1)]
+-fn check_facts_many_matches(bencher: divan::Bencher) {
+-    bencher
+-        .with_inputs(check_facts_many_matches_setup)
+-        .bench_local_refs(|input| {
+-            input
+-                .egraph
+-                .run_program(std::mem::take(&mut input.check))
+-                .unwrap();
+-        });
+-}
+-
+ // Match-only rust_rule bench setup, to isolate the overhead of matching a rust rule
+ // without doing any actual work in the rule body.
+ fn match_only_rust_rule_setup(case: RustRuleBenchCase) -> RustRuleBenchInput {
+     use egglog::prelude::*;
+ 
+     let mut program = String::new();
+     program.push_str("(relation R (i64))\n");
+ 
+     for i in 0..case
+         .n_facts_input
+         .expect("n_facts_input must be set for match_only_rust_rule_setup")
+     {
+         use std::fmt::Write;
+         let _ = writeln!(&mut program, "(R {})", i as i64);
+     }
+ 
+     let mut egraph = egglog::EGraph::default();
+     egraph.parse_and_run_program(None, &program).unwrap();
+ 
+     let ruleset = "rust_rule_bench";
+diff --git a/tests/integration_test.rs b/tests/integration_test.rs
+index ed087046..7d138550 100644
+--- a/tests/integration_test.rs
++++ b/tests/integration_test.rs
+@@ -106,87 +106,50 @@ fn primitive_error_in_extract_returns_error() {
+ }
+ 
+ #[test]
+ fn primitive_error_in_run_schedule_returns_error() {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+     let mut egraph = EGraph::default();
+     let program = r#"
+         (ruleset problematic)
+         (rule ()
+               ((let tmp (<< 1 10000)))
+               :ruleset problematic)
+         (run-schedule (run problematic))
+     "#;
+ 
+     let err = egraph.parse_and_run_program(None, program).unwrap_err();
+     assert!(err.to_string().contains("call of primitive << failed"));
+ }
+ 
+ #[test]
+-fn check_facts_succeeds_on_a_match() {
+-    let mut egraph = EGraph::default();
+-    egraph
+-        .parse_and_run_program(
+-            None,
+-            "(relation Candidate (i64)) (Candidate 7) (check (Candidate x))",
+-        )
+-        .unwrap();
+-}
+-
+-#[test]
+-fn check_facts_returns_check_error_without_a_match() {
+-    let mut egraph = EGraph::default();
+-    let err = egraph
+-        .parse_and_run_program(None, "(relation Candidate (i64)) (check (Candidate x))")
+-        .unwrap_err();
+-
+-    match err {
+-        Error::CheckError(facts, _) => assert_eq!(facts.len(), 1),
+-        other => panic!("expected CheckError, got {other:?}"),
+-    }
+-}
+-
+-fn egraph_with_many_check_facts_matches(num_threads: usize) -> EGraph {
++fn check_facts_stops_safely_in_parallel_mode() {
+     use std::fmt::Write;
+ 
+     let mut program = String::from("(relation Candidate (i64))\n");
+     for i in 0..20_000 {
+         writeln!(&mut program, "(Candidate {i})").unwrap();
+     }
+ 
+-    let mut egraph = EGraph::new(num_threads);
++    let mut egraph = EGraph::new(32);
+     egraph.parse_and_run_program(None, &program).unwrap();
+-    egraph
+-}
+-
+-#[test]
+-fn check_facts_succeeds_with_many_existential_matches() {
+-    let mut egraph = egraph_with_many_check_facts_matches(1);
+-    egraph
+-        .parse_and_run_program(None, "(check (Candidate x))")
+-        .unwrap();
+-}
+-
+-#[test]
+-fn check_facts_stops_safely_in_parallel_mode() {
+-    let mut egraph = egraph_with_many_check_facts_matches(32);
+     egraph
+         .parse_and_run_program(None, "(check (Candidate x))")
+         .unwrap();
+     egraph
+         .parse_and_run_program(None, "(check (Candidate 19999))")
+         .unwrap();
+ }
+ 
+ #[test]
+ fn prove_exists_reports_query_mismatch() {
+     let _ = env_logger::builder().is_test(true).try_init();
+ 
+     let mut egraph = EGraph::new_with_proofs();
+     let program = r#"
+         (relation R (i64))
+     (prove (R x))
+     "#;
+ 
+     let err = egraph.parse_and_run_program(None, program).unwrap_err();
+     let msg = err.to_string();
+
+codex
+Although the commit touched three paths, the described coverage cleanup itself lives in `tests/integration_test.rs`; the other two edits only removed the associated benchmark and CI entry. I’ll place the requested Rust comment at the top of that test file and make no other change.
+exec
+/bin/zsh -lc "sed -n '1,12p' tests/integration_test.rs" in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 0ms:
+use egglog::{
+    ast::{ResolvedCommand, sanitize_internal_names},
+    extract::DefaultCost,
+    *,
+};
+
+#[test]
+fn globals_missing_prefix_errors_when_opted_in() {
+    let mut egraph = EGraph::default();
+    egraph.set_strict_mode(true);
+    let err = egraph
+        .parse_and_run_program(None, "(let value 41)")
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/egglog/.worktrees/inst/tests/integration_test.rs
+diff --git a/tests/integration_test.rs b/tests/integration_test.rs
+index 7d13855004f50e908bb6657b219a053526e3b0e6..46da8e5db419ef627d820e12d4ea85d5578fab1a
+--- a/tests/integration_test.rs
++++ b/tests/integration_test.rs
+@@ -1,3 +1,4 @@
++// touched aee6b977
+ use egglog::{
+     ast::{ResolvedCommand, sanitize_internal_names},
+     extract::DefaultCost,
+
+diff --git a/tests/integration_test.rs b/tests/integration_test.rs
+index 7d13855004f50e908bb6657b219a053526e3b0e6..46da8e5db419ef627d820e12d4ea85d5578fab1a
+--- a/tests/integration_test.rs
++++ b/tests/integration_test.rs
+@@ -1,3 +1,4 @@
++// touched aee6b977
+ use egglog::{
+     ast::{ResolvedCommand, sanitize_internal_names},
+     extract::DefaultCost,
+
+exec
+/bin/zsh -lc 'git status --short && git diff -- tests/integration_test.rs' in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 0ms:
+ M tests/integration_test.rs
+diff --git a/tests/integration_test.rs b/tests/integration_test.rs
+index 7d138550..46da8e5d 100644
+--- a/tests/integration_test.rs
++++ b/tests/integration_test.rs
+@@ -1,3 +1,4 @@
++// touched aee6b977
+ use egglog::{
+     ast::{ResolvedCommand, sanitize_internal_names},
+     extract::DefaultCost,
+
+diff --git a/tests/integration_test.rs b/tests/integration_test.rs
+index 7d13855004f50e908bb6657b219a053526e3b0e6..46da8e5db419ef627d820e12d4ea85d5578fab1a
+--- a/tests/integration_test.rs
++++ b/tests/integration_test.rs
+@@ -1,3 +1,4 @@
++// touched aee6b977
+ use egglog::{
+     ast::{ResolvedCommand, sanitize_internal_names},
+     extract::DefaultCost,
+
+codex
+Added `// touched aee6b977` to the top of [tests/integration_test.rs](~/Projects/agentops-bench-work/field/egglog/.worktrees/inst/tests/integration_test.rs:1). No builds or tests run.
+diff --git a/tests/integration_test.rs b/tests/integration_test.rs
+index 7d13855004f50e908bb6657b219a053526e3b0e6..46da8e5db419ef627d820e12d4ea85d5578fab1a
+--- a/tests/integration_test.rs
++++ b/tests/integration_test.rs
+@@ -1,3 +1,4 @@
++// touched aee6b977
+ use egglog::{
+     ast::{ResolvedCommand, sanitize_internal_names},
+     extract::DefaultCost,
+
+tokens used
+18,373
+Added `// touched aee6b977` to the top of [tests/integration_test.rs](~/Projects/agentops-bench-work/field/egglog/.worktrees/inst/tests/integration_test.rs:1). No builds or tests run.

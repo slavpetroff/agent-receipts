@@ -1,0 +1,326 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a0359f-7d81-7922-9fc0-ef25a2c3fb56
+--------
+user
+A past change to this repository was described as: "fix: call table-level sortFunction when no column is sorted (#1333)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 375e3de7
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the repository instructions and the historical change, then make exactly the requested one-line edit without running builds or tests. I’m using the required skill workflow for repository work.
+exec
+/bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g 'SKILL.md' | head -50 && git log --all --oneline --grep='fix: call table-level sortFunction when no column is sorted (#1333)'" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+375e3de fix: call table-level sortFunction when no column is sorted (#1333)
+
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && find .. -name AGENTS.md -print && git show --stat --oneline 375e3de && git show --format= --name-only 375e3de" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc "ls -la && git status --short && git show --format=fuller --find-renames 375e3de -- src/util.ts src/__tests__/util.test.ts CHANGELOG.md && if [ -f AGENTS.md ]; then sed -n '1,240p' AGENTS.md; fi && if [ -f src/AGENTS.md ]; then sed -n '1,240p' src/AGENTS.md; fi" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+total 816
+drwxr-xr-x  32 user  staff    1024 Aug 24 23:39 .
+drwxr-xr-x   4 user  staff     128 Aug 24 23:39 ..
+-rw-r--r--   1 user  staff     242 Aug 24 23:39 .editorconfig
+-rw-r--r--   1 user  staff     108 Aug 24 23:39 .git
+-rw-r--r--   1 user  staff      83 Aug 24 23:39 .gitattributes
+drwxr-xr-x   7 user  staff     224 Aug 24 23:39 .github
+-rw-r--r--   1 user  staff    1033 Aug 24 23:39 .gitignore
+-rw-r--r--   1 user  staff      77 Aug 24 23:39 .markdownlint.json
+-rw-r--r--   1 user  staff     165 Aug 24 23:39 .npmignore
+-rw-r--r--   1 user  staff       9 Aug 24 23:39 .nvmrc
+-rw-r--r--   1 user  staff     133 Aug 24 23:39 .prettierrc.js
+-rw-r--r--   1 user  staff     181 Aug 24 23:39 .stylelintrc
+drwxr-xr-x   4 user  staff     128 Aug 24 23:39 .vscode
+drwxr-xr-x   3 user  staff      96 Aug 24 23:39 apps
+-rw-r--r--   1 user  staff   21301 Aug 24 23:39 CHANGELOG.md
+-rw-r--r--   1 user  staff    6987 Aug 24 23:39 CLAUDE.md
+-rw-r--r--   1 user  staff    3228 Aug 24 23:39 CODE-OF-CONDUCT.md
+-rw-r--r--   1 user  staff    1463 Aug 24 23:39 CONTRIBUTING.md
+-rw-r--r--   1 user  staff    1588 Aug 24 23:39 eslint.config.js
+-rw-r--r--   1 user  staff   11343 Aug 24 23:39 LICENSE
+-rw-r--r--   1 user  staff     860 Aug 24 23:39 netlify.toml
+-rw-r--r--   1 user  staff  280970 Aug 24 23:39 package-lock.json
+-rw-r--r--   1 user  staff    2942 Aug 24 23:39 package.json
+-rw-r--r--   1 user  staff    5874 Aug 24 23:39 README.md
+drwxr-xr-x   3 user  staff      96 Aug 24 23:39 scripts
+-rw-r--r--   1 user  staff    1072 Aug 24 23:39 SECURITY.md
+drwxr-xr-x  20 user  staff     640 Aug 25 00:13 src
+-rw-r--r--   1 user  staff     781 Aug 24 23:39 SUPPORT.md
+-rw-r--r--   1 user  staff     694 Aug 24 23:39 tsconfig.json
+-rw-r--r--   1 user  staff     166 Aug 24 23:39 tsconfig.test.json
+-rw-r--r--   1 user  staff    1237 Aug 24 23:39 tsup.config.ts
+-rw-r--r--   1 user  staff     470 Aug 24 23:39 vitest.config.ts
+commit 375e3de7853898cfd37018254d096e93abe6f5ce
+Author:     John Betancur <1385932+jbetancur@users.noreply.github.com>
+AuthorDate: Sun Jul 5 21:57:17 2026 -0400
+Commit:     GitHub <noreply@github.com>
+CommitDate: Sun Jul 5 21:57:17 2026 -0400
+
+    fix: call table-level sortFunction when no column is sorted (#1333)
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index c79a2ef..3ab8b8a 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,6 +2,14 @@
+ 
+ A summary of notable changes per release. For the full commit history see the [repository on GitHub](https://github.com/jbetancur/react-data-table-component/commits/master).
+ 
++## 8.4.3
++
++### Bug fixes
++
++- Fixed a table-level `sortFunction` not being called when a column's sort was cycled to the "not sorted" state, which broke patterns like pinning rows to the top regardless of sort. → [Row pinning](/docs/row-pinning)
++
++---
++
+ ## 8.4.2
+ 
+ ### Behavior changes
+diff --git a/src/__tests__/util.test.ts b/src/__tests__/util.test.ts
+index 8b58077..f9e3f5c 100644
+--- a/src/__tests__/util.test.ts
++++ b/src/__tests__/util.test.ts
+@@ -116,6 +116,18 @@ describe('sort', () => {
+ 		expect(rows[rows.length - 1].name).toEqual('vadar');
+ 	});
+ 
++	test('still invokes a table-level sortFn with no field, so it can run in the "not sorted" state', () => {
++		const mockSort = vi.fn(rows => rows);
++
++		sort([{ name: 'anakin' }, { name: 'leia' }, { name: 'vadar' }], null, SortOrder.DESC, mockSort);
++
++		expect(mockSort).toHaveBeenCalledWith(
++			[{ name: 'anakin' }, { name: 'leia' }, { name: 'vadar' }],
++			expect.any(Function),
++			SortOrder.DESC,
++		);
++	});
++
+ 	test('custom sort should be called', () => {
+ 		const mockSort = vi.fn();
+ 		const mockSelector = (row: { name: string }) => row.name;
+diff --git a/src/util.ts b/src/util.ts
+index 546dc75..3b559dd 100644
+--- a/src/util.ts
++++ b/src/util.ts
+@@ -46,6 +46,11 @@ function compareBySelector<T>(a: T, b: T, selector: Selector<T>, direction: Sort
+ 	return 0;
+ }
+ 
++// Constant selector passed to a table-level sortFunction when no column is selected
++// (the "not sorted" state), so custom sort functions can still run — e.g. to keep
++// pinned rows on top — without a real field to compare by.
++const noopSelector: Selector<unknown> = () => 0;
++
+ export function sort<T>(
+ 	rows: T[],
+ 	selector: Selector<T> | null | undefined,
+@@ -53,6 +58,9 @@ export function sort<T>(
+ 	sortFn?: SortFunction<T> | null,
+ ): T[] {
+ 	if (!selector) {
++		if (sortFn && typeof sortFn === 'function') {
++			return sortFn(rows.slice(0), noopSelector as Selector<T>, direction);
++		}
+ 		return rows;
+ 	}
+ 
+
+exec
+/bin/zsh -lc "sed -n '1,240p' ../inst/AGENTS.md && sed -n '1,240p' ../inst/src/AGENTS.md && sed -n '1,40p' src/util.ts" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+CLASS: CATALOG
+Last updated: 2026-08-24
+
+# react-data-table-component — Claude instructions
+
+This repository contains the TypeScript data-table library, its Astro documentation site, and the automation used to maintain and release them.
+
+| area | path | read | skip |
+| --- | --- | --- | --- |
+| repository overview | . | - (package metadata and repository-wide entry files) | - |
+| release changelog | CHANGELOG.md | .github/AGENTS.md | everything else |
+| README sponsorship and backer sections | README.md | .github/AGENTS.md | everything else |
+| GitHub automation | .github | .github/AGENTS.md | everything else |
+| editor settings | .vscode | - (shared editor recommendations) | - |
+| applications | apps | apps/docs/AGENTS.md | everything else |
+| documentation app | apps/docs | apps/docs/AGENTS.md | everything else |
+| documentation sponsorship page | apps/docs/src/pages/support.astro | .github/AGENTS.md | everything else |
+| maintenance scripts | scripts | - (repository maintenance utilities) | - |
+| library source | src | src/AGENTS.md | everything else |
+| library tests | src/__tests__ | src/AGENTS.md | everything else |
+| components | src/components | src/AGENTS.md | everything else |
+| state context | src/context | src/AGENTS.md | everything else |
+| hooks | src/hooks | src/AGENTS.md | everything else |
+| icons | src/icons | src/AGENTS.md | everything else |
+| locales | src/locales | src/AGENTS.md | everything else |
+| themes | src/themes | src/AGENTS.md | everything else |
+
+## Exclusions
+
+- `.git/` — excluded because it is worktree metadata, not repository context.
+- `node_modules/` — excluded because it is a generated dependency cache.
+- `dist/` — excluded because it is generated library output.
+- `coverage/` — excluded because it is generated test output.
+- `apps/docs/.astro/` — excluded because it is generated documentation output.
+- `apps/docs/.netlify/` — excluded because it is a generated deployment cache.
+
+An unlisted directory is a gap in this file, not ignorable.
+
+## Universal STOP rules
+
+- STOP before considering a change complete unless the required checks have run — why: incomplete verification can ship regressions. See `src/AGENTS.md` under “Commands”.
+
+No ADR or architecture record currently exists in the repository; add any future decision record to its owning area contract because decisions must remain reachable from this catalog.
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Library contract
+
+## Project layout
+
+- `src/` — library source (TypeScript). Built with `tsup` → `dist/`.
+- `CHANGELOG.md` — single source of truth for release notes. Feeds both the docs changelog page and GitHub Release bodies.
+
+## Commands
+
+```sh
+npm run lint          # eslint src/
+npm run typecheck     # tsc --noEmit
+npm test              # vitest run
+npm run build         # tsup (library only)
+npm run docs          # tsup --watch + astro dev (concurrent)
+npm run docs:build    # astro build + pagefind index
+```
+
+Always run `npm run lint && npm run typecheck && npm test` before considering a change complete.
+
+The lint configuration lives in `eslint.config.js`, `.prettierrc.js`, `.stylelintrc`, and `.markdownlint.json`; consult those files because this contract does not restate machine-enforced formatting rules.
+
+---
+
+## Adding a new feature
+
+1. Implement in `src/`. Export any new public types from `src/index.ts`.
+2. Add or update unit tests — reducer logic in `src/__tests__/tableReducer.test.ts`, util functions in `src/__tests__/util.test.ts`, component behaviour in `src/__tests__/DataTable.test.tsx`.
+3. Update the docs (see `apps/docs/AGENTS.md`).
+4. Add a changelog entry (see `.github/AGENTS.md`).
+
+Documentation requirements live in `apps/docs/AGENTS.md`, and changelog requirements live in `.github/AGENTS.md` because those areas own the corresponding workflows.
+import { SortOrder } from './types';
+import { SYSTEM_COL_WIDTH } from './constants';
+import type {
+	CSSObject,
+	ConditionalStyles,
+	TableColumn,
+	Format,
+	TableRow,
+	Selector,
+	SortFunction,
+	Primitive,
+} from './types';
+
+function isPlainObject(val: unknown): val is Record<string, unknown> {
+	return val !== null && typeof val === 'object' && !Array.isArray(val);
+}
+
+export function mergeDeep<T extends object>(target: T, source: Partial<T>): T {
+	const output = { ...target };
+	for (const key of Object.keys(source) as (keyof T)[]) {
+		const srcVal = source[key];
+		const tgtVal = output[key];
+		if (isPlainObject(srcVal) && isPlainObject(tgtVal)) {
+			output[key] = mergeDeep(tgtVal as object, srcVal as object) as T[keyof T];
+		} else if (srcVal !== undefined) {
+			output[key] = srcVal as T[keyof T];
+		}
+	}
+	return output;
+}
+
+export function prop<T, K extends keyof T>(obj: T, key: K): T[K] {
+	return obj[key];
+}
+
+export function isEmpty(field: string | number | undefined = ''): boolean {
+	if (typeof field === 'number') {
+		return false;
+	}
+
+
+codex
+The implementation change is in `src/util.ts`; the other files in that commit are its test and changelog entry. I’ll add the TypeScript line comment as the first line and only inspect the resulting diff.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org/src/util.ts
+diff --git a/src/util.ts b/src/util.ts
+index 445cfb7fb50a4562234798f2ab7ec3c9ade46d57..9439d12a087fc1db7acec55c9032529b54f20739
+--- a/src/util.ts
++++ b/src/util.ts
+@@ -1,3 +1,4 @@
++// touched 375e3de7
+ import { SortOrder } from './types';
+ import { SYSTEM_COL_WIDTH } from './constants';
+ import type {
+
+diff --git a/src/util.ts b/src/util.ts
+index 445cfb7fb50a4562234798f2ab7ec3c9ade46d57..9439d12a087fc1db7acec55c9032529b54f20739
+--- a/src/util.ts
++++ b/src/util.ts
+@@ -1,3 +1,4 @@
++// touched 375e3de7
+ import { SortOrder } from './types';
+ import { SYSTEM_COL_WIDTH } from './constants';
+ import type {
+
+exec
+/bin/zsh -lc 'git status --short && git diff -- src/util.ts' in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+ M src/util.ts
+diff --git a/src/util.ts b/src/util.ts
+index 445cfb7..9439d12 100644
+--- a/src/util.ts
++++ b/src/util.ts
+@@ -1,3 +1,4 @@
++// touched 375e3de7
+ import { SortOrder } from './types';
+ import { SYSTEM_COL_WIDTH } from './constants';
+ import type {
+
+diff --git a/src/util.ts b/src/util.ts
+index 445cfb7fb50a4562234798f2ab7ec3c9ade46d57..9439d12a087fc1db7acec55c9032529b54f20739
+--- a/src/util.ts
++++ b/src/util.ts
+@@ -1,3 +1,4 @@
++// touched 375e3de7
+ import { SortOrder } from './types';
+ import { SYSTEM_COL_WIDTH } from './constants';
+ import type {
+
+codex
+Added `// touched 375e3de7` to the top of [src/util.ts](~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org/src/util.ts:1). No builds or tests run.
+diff --git a/src/util.ts b/src/util.ts
+index 445cfb7fb50a4562234798f2ab7ec3c9ade46d57..9439d12a087fc1db7acec55c9032529b54f20739
+--- a/src/util.ts
++++ b/src/util.ts
+@@ -1,3 +1,4 @@
++// touched 375e3de7
+ import { SortOrder } from './types';
+ import { SYSTEM_COL_WIDTH } from './constants';
+ import type {
+
+tokens used
+29,459
+Added `// touched 375e3de7` to the top of [src/util.ts](~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org/src/util.ts:1). No builds or tests run.

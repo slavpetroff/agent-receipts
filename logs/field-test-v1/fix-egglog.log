@@ -1,0 +1,509 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03594-66e3-7c21-bcc4-0c546c258b3a
+--------
+user
+TASK: The gate now FAILS on this worktree because your earlier restructure
+DROPPED lines from the old context layer. Rule 3 of the playbook: content is
+MOVED, never dropped — every substantive line of the old layer must exist
+verbatim (same wording) somewhere in the new layer, at its correct home.
+
+Run the gate:
+  ~/Projects/agentops-business/tools/install/check_layer.sh .
+It names the missing lines. Restore EVERY missing line VERBATIM into the
+appropriate file of the new layer (the area file that owns that topic — do
+not just paste them all into the root). Re-run the gate until it prints
+PASS. Only .md files may change. Never push.
+
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll use the systematic-debugging and verification skills to trace each gate-reported omission to its owning area file, restore the exact wording, and rerun the repository’s prescribed checks. I’ll keep changes limited to Markdown and won’t push.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && sed -n '1,260p' ~/.agents/skills/systematic-debugging/SKILL.md && sed -n '1,240p' ~/.agents/skills/verification-before-completion/SKILL.md && sed -n '1,260p' .github/AGENTS.md" in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+I’ve loaded the governing repository checks. I’m now reproducing the failure and comparing the current Markdown-only restructure so each omitted line can be placed by topic instead of collected at the catalog root.
+exec
+/bin/zsh -lc "~/Projects/agentops-business/tools/install/check_layer.sh .; git status --short; git diff -- '*.md'" in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 191ms:
+FAIL preservation: 4 substantive lines of the old layer are missing:
+  LOST: - The main `egglog` crate has the source code under `./src/` and is concerned with parsing
+  LOST: - `core-relations` is the backing database implementation. It supports both parallel and s
+  LOST: - `egglog-bridge` is the bridge between the main crate and the core-relations, and provide
+  LOST: - The `tests` folder contains a list of example egglog programs.
+GATE: FAILED (fix the named items, re-run)
+ M CLAUDE.md
+?? .github/AGENTS.md
+?? AGENTS.md
+?? core-relations/AGENTS.md
+?? egglog-bridge/AGENTS.md
+?? src/AGENTS.md
+?? tests/AGENTS.md
+diff --git a/CLAUDE.md b/CLAUDE.md
+index f85a62e8..e077dc3c 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -1,21 +1,3 @@
+-# egglog
++@AGENTS.md
+ 
+-egglog is a unified tool for program optimization and program analysis
+- and can be conceptually thought of as Datalog + a union-find data structure.
+-
+-## Project structure
+-
+-- The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
+-- `core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
+-- `egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
+-- The `tests` folder contains a list of example egglog programs.
+-
+-## Best practices
+-
+-When you edit the files, make sure to respect the following:
+-
+-- Always run `make fixnits` (or `make nits`) before you stop.
+-- When running tests, always use the `--release` mode. Alternatively, you can also run `make test`.
+-- If your change is performance-critical, use `script/bench.py` as the ground truth to evaluate the performance impact.
+-- Keep your documentation concise and avoid duplicate information. The `tidy-diff-docs` skill (`.claude/skills/tidy-diff-docs/`) cleans the doc and code comments in a diff down to the caller-facing contract.
+-- Update CHANGELOG.md with a concise bullet when you make major changes (e.g., breaking changes or new features added) in the codebase. Don't update CHANGELOG.md if it's just a bug fix or if it's not a user-facing change. However, major performance improvements (e.g., using a new join algorithm or introducing a new sort of indices) should be documented.
++This shim directs Claude-compatible agents to the repository context catalog.
+
+exec
+/bin/zsh -lc "sed -n '1,260p' src/AGENTS.md; sed -n '1,260p' core-relations/AGENTS.md; sed -n '1,260p' egglog-bridge/AGENTS.md; sed -n '1,260p' tests/AGENTS.md" in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Main crate contract
+
+The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
+
+Start with `src/lib.md` for the language and Rust API entry points. The `src/sort/add_primitive` package owns the `egglog-add-primitive` procedural macro; backing database implementation lives in `core-relations`, and its main-crate adapter lives in `egglog-bridge`.
+
+## Architecture and decision index
+
+| record | body |
+| --- | --- |
+| term and proof encoding | src/proofs/proof_encoding.md |
+
+The indexed record is the single home for its full architecture text; this contract only makes it reachable.
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Core relations contract
+
+`core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
+
+Concurrency primitives live in `concurrency`, identifiers live in `numeric-id`, union-find storage lives in `union-find`, and main-crate adaptation lives in `egglog-bridge`.
+
+Repository lint and test enforcement is defined by `Makefile`, `clippy.toml`, and `.config/nextest.toml`.
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Bridge contract
+
+`egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
+
+The database implementation remains owned by `core-relations`; language parsing, desugaring, proofs, type checking, and lowering remain owned by `src`.
+
+Use the shared enforcement sources at `Makefile`, `clippy.toml`, and `.config/nextest.toml`.
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Test corpus contract
+
+The `tests` folder contains a list of example egglog programs.
+
+`tests/fail-typecheck` owns programs expected to fail type checking, `tests/pass-typecheck` owns programs expected to pass it, `tests/header` owns shared input headers, `tests/proofs` owns proof examples, and `tests/web-demo` owns browser-demo fixtures. Snapshot output lives in `tests/snapshots` and is regenerated through the repository's test harness rather than edited as independent source.
+
+Repository test ordering and enforcement is defined by `Makefile` and `.config/nextest.toml`.
+
+codex
+The root cause is exact-text preservation, not missing subject matter: all four sentences were moved to the right area files, but their leading `- ` was removed, so none exists verbatim. I’ll make the minimal correction by restoring the bullet marker on each owning contract line.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/egglog/.worktrees/inst/core-relations/AGENTS.md
+~/Projects/agentops-bench-work/field/egglog/.worktrees/inst/egglog-bridge/AGENTS.md
+~/Projects/agentops-bench-work/field/egglog/.worktrees/inst/src/AGENTS.md
+~/Projects/agentops-bench-work/field/egglog/.worktrees/inst/tests/AGENTS.md
+diff --git a/core-relations/AGENTS.md b/core-relations/AGENTS.md
+index 40672226fbe5cb2094220a0750d179c97ed35150..209641524bb6a03030dead7676ef749ef6a8e429
+--- a/core-relations/AGENTS.md
++++ b/core-relations/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Core relations contract
+ 
+-`core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
++- `core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
+ 
+ Concurrency primitives live in `concurrency`, identifiers live in `numeric-id`, union-find storage lives in `union-find`, and main-crate adaptation lives in `egglog-bridge`.
+ 
+diff --git a/egglog-bridge/AGENTS.md b/egglog-bridge/AGENTS.md
+index 6dbc55187f1b2cf237ff175021fe57ffcd69e6ce..2b1d34b56a4744eada98ec2c586379e0932b3127
+--- a/egglog-bridge/AGENTS.md
++++ b/egglog-bridge/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Bridge contract
+ 
+-`egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
++- `egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
+ 
+ The database implementation remains owned by `core-relations`; language parsing, desugaring, proofs, type checking, and lowering remain owned by `src`.
+ 
+diff --git a/src/AGENTS.md b/src/AGENTS.md
+index 8564608ac2334ac2356ac88dda196df34e9e2616..4103e5efed3a84ae5f36eae1e4a6f8434761c1ea
+--- a/src/AGENTS.md
++++ b/src/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Main crate contract
+ 
+-The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
++- The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
+ 
+ Start with `src/lib.md` for the language and Rust API entry points. The `src/sort/add_primitive` package owns the `egglog-add-primitive` procedural macro; backing database implementation lives in `core-relations`, and its main-crate adapter lives in `egglog-bridge`.
+ 
+diff --git a/tests/AGENTS.md b/tests/AGENTS.md
+index 1a99da0f615b2e1940efd7d632b70b3320ec9153..abd6f57fdb54c8fa4cbe3ef89bb8df91321d0eef
+--- a/tests/AGENTS.md
++++ b/tests/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Test corpus contract
+ 
+-The `tests` folder contains a list of example egglog programs.
++- The `tests` folder contains a list of example egglog programs.
+ 
+ `tests/fail-typecheck` owns programs expected to fail type checking, `tests/pass-typecheck` owns programs expected to pass it, `tests/header` owns shared input headers, `tests/proofs` owns proof examples, and `tests/web-demo` owns browser-demo fixtures. Snapshot output lives in `tests/snapshots` and is regenerated through the repository's test harness rather than edited as independent source.
+ 
+
+diff --git a/core-relations/AGENTS.md b/core-relations/AGENTS.md
+index 40672226fbe5cb2094220a0750d179c97ed35150..209641524bb6a03030dead7676ef749ef6a8e429
+--- a/core-relations/AGENTS.md
++++ b/core-relations/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Core relations contract
+ 
+-`core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
++- `core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
+ 
+ Concurrency primitives live in `concurrency`, identifiers live in `numeric-id`, union-find storage lives in `union-find`, and main-crate adaptation lives in `egglog-bridge`.
+ 
+diff --git a/egglog-bridge/AGENTS.md b/egglog-bridge/AGENTS.md
+index 6dbc55187f1b2cf237ff175021fe57ffcd69e6ce..2b1d34b56a4744eada98ec2c586379e0932b3127
+--- a/egglog-bridge/AGENTS.md
++++ b/egglog-bridge/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Bridge contract
+ 
+-`egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
++- `egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
+ 
+ The database implementation remains owned by `core-relations`; language parsing, desugaring, proofs, type checking, and lowering remain owned by `src`.
+ 
+diff --git a/src/AGENTS.md b/src/AGENTS.md
+index 8564608ac2334ac2356ac88dda196df34e9e2616..4103e5efed3a84ae5f36eae1e4a6f8434761c1ea
+--- a/src/AGENTS.md
++++ b/src/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Main crate contract
+ 
+-The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
++- The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
+ 
+ Start with `src/lib.md` for the language and Rust API entry points. The `src/sort/add_primitive` package owns the `egglog-add-primitive` procedural macro; backing database implementation lives in `core-relations`, and its main-crate adapter lives in `egglog-bridge`.
+ 
+diff --git a/tests/AGENTS.md b/tests/AGENTS.md
+index 1a99da0f615b2e1940efd7d632b70b3320ec9153..abd6f57fdb54c8fa4cbe3ef89bb8df91321d0eef
+--- a/tests/AGENTS.md
++++ b/tests/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Test corpus contract
+ 
+-The `tests` folder contains a list of example egglog programs.
++- The `tests` folder contains a list of example egglog programs.
+ 
+ `tests/fail-typecheck` owns programs expected to fail type checking, `tests/pass-typecheck` owns programs expected to pass it, `tests/header` owns shared input headers, `tests/proofs` owns proof examples, and `tests/web-demo` owns browser-demo fixtures. Snapshot output lives in `tests/snapshots` and is regenerated through the repository's test harness rather than edited as independent source.
+ 
+
+exec
+/bin/zsh -lc '~/Projects/agentops-business/tools/install/check_layer.sh .' in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 147ms:
+PASS — layer clean · boot ≈ 1970 tokens/session
+
+diff --git a/core-relations/AGENTS.md b/core-relations/AGENTS.md
+index 40672226fbe5cb2094220a0750d179c97ed35150..209641524bb6a03030dead7676ef749ef6a8e429
+--- a/core-relations/AGENTS.md
++++ b/core-relations/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Core relations contract
+ 
+-`core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
++- `core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
+ 
+ Concurrency primitives live in `concurrency`, identifiers live in `numeric-id`, union-find storage lives in `union-find`, and main-crate adaptation lives in `egglog-bridge`.
+ 
+diff --git a/egglog-bridge/AGENTS.md b/egglog-bridge/AGENTS.md
+index 6dbc55187f1b2cf237ff175021fe57ffcd69e6ce..2b1d34b56a4744eada98ec2c586379e0932b3127
+--- a/egglog-bridge/AGENTS.md
++++ b/egglog-bridge/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Bridge contract
+ 
+-`egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
++- `egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
+ 
+ The database implementation remains owned by `core-relations`; language parsing, desugaring, proofs, type checking, and lowering remain owned by `src`.
+ 
+diff --git a/src/AGENTS.md b/src/AGENTS.md
+index 8564608ac2334ac2356ac88dda196df34e9e2616..4103e5efed3a84ae5f36eae1e4a6f8434761c1ea
+--- a/src/AGENTS.md
++++ b/src/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Main crate contract
+ 
+-The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
++- The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
+ 
+ Start with `src/lib.md` for the language and Rust API entry points. The `src/sort/add_primitive` package owns the `egglog-add-primitive` procedural macro; backing database implementation lives in `core-relations`, and its main-crate adapter lives in `egglog-bridge`.
+ 
+diff --git a/tests/AGENTS.md b/tests/AGENTS.md
+index 1a99da0f615b2e1940efd7d632b70b3320ec9153..abd6f57fdb54c8fa4cbe3ef89bb8df91321d0eef
+--- a/tests/AGENTS.md
++++ b/tests/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Test corpus contract
+ 
+-The `tests` folder contains a list of example egglog programs.
++- The `tests` folder contains a list of example egglog programs.
+ 
+ `tests/fail-typecheck` owns programs expected to fail type checking, `tests/pass-typecheck` owns programs expected to pass it, `tests/header` owns shared input headers, `tests/proofs` owns proof examples, and `tests/web-demo` owns browser-demo fixtures. Snapshot output lives in `tests/snapshots` and is regenerated through the repository's test harness rather than edited as independent source.
+ 
+
+codex
+The preservation gate now prints `PASS`. I’m running the repository-required `make fixnits` check next, then I’ll audit the final diff to confirm no non-Markdown file changed and all four lines remain in their topic owners.
+diff --git a/core-relations/AGENTS.md b/core-relations/AGENTS.md
+index 40672226fbe5cb2094220a0750d179c97ed35150..209641524bb6a03030dead7676ef749ef6a8e429
+--- a/core-relations/AGENTS.md
++++ b/core-relations/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Core relations contract
+ 
+-`core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
++- `core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
+ 
+ Concurrency primitives live in `concurrency`, identifiers live in `numeric-id`, union-find storage lives in `union-find`, and main-crate adaptation lives in `egglog-bridge`.
+ 
+diff --git a/egglog-bridge/AGENTS.md b/egglog-bridge/AGENTS.md
+index 6dbc55187f1b2cf237ff175021fe57ffcd69e6ce..2b1d34b56a4744eada98ec2c586379e0932b3127
+--- a/egglog-bridge/AGENTS.md
++++ b/egglog-bridge/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Bridge contract
+ 
+-`egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
++- `egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
+ 
+ The database implementation remains owned by `core-relations`; language parsing, desugaring, proofs, type checking, and lowering remain owned by `src`.
+ 
+diff --git a/src/AGENTS.md b/src/AGENTS.md
+index 8564608ac2334ac2356ac88dda196df34e9e2616..4103e5efed3a84ae5f36eae1e4a6f8434761c1ea
+--- a/src/AGENTS.md
++++ b/src/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Main crate contract
+ 
+-The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
++- The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
+ 
+ Start with `src/lib.md` for the language and Rust API entry points. The `src/sort/add_primitive` package owns the `egglog-add-primitive` procedural macro; backing database implementation lives in `core-relations`, and its main-crate adapter lives in `egglog-bridge`.
+ 
+diff --git a/tests/AGENTS.md b/tests/AGENTS.md
+index 1a99da0f615b2e1940efd7d632b70b3320ec9153..abd6f57fdb54c8fa4cbe3ef89bb8df91321d0eef
+--- a/tests/AGENTS.md
++++ b/tests/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Test corpus contract
+ 
+-The `tests` folder contains a list of example egglog programs.
++- The `tests` folder contains a list of example egglog programs.
+ 
+ `tests/fail-typecheck` owns programs expected to fail type checking, `tests/pass-typecheck` owns programs expected to pass it, `tests/header` owns shared input headers, `tests/proofs` owns proof examples, and `tests/web-demo` owns browser-demo fixtures. Snapshot output lives in `tests/snapshots` and is regenerated through the repository's test harness rather than edited as independent source.
+ 
+
+codex
+`make fixnits` is blocked before repository checks run because rustup tries to create a temp file under `~/.rustup`, which this workspace sandbox cannot write. It made no useful progress; I’ll still perform a fresh gate run and a file-type/diff audit, and I’ll report that environment limitation explicitly.
+exec
+/bin/zsh -lc '~/Projects/agentops-business/tools/install/check_layer.sh .; git status --short; git diff --name-only; git diff --check; git diff -- src/AGENTS.md core-relations/AGENTS.md egglog-bridge/AGENTS.md tests/AGENTS.md' in ~/Projects/agentops-bench-work/field/egglog/.worktrees/inst
+ succeeded in 239ms:
+PASS — layer clean · boot ≈ 1970 tokens/session
+ M CLAUDE.md
+?? .github/AGENTS.md
+?? AGENTS.md
+?? core-relations/AGENTS.md
+?? egglog-bridge/AGENTS.md
+?? src/AGENTS.md
+?? tests/AGENTS.md
+CLAUDE.md
+
+diff --git a/core-relations/AGENTS.md b/core-relations/AGENTS.md
+index 40672226fbe5cb2094220a0750d179c97ed35150..209641524bb6a03030dead7676ef749ef6a8e429
+--- a/core-relations/AGENTS.md
++++ b/core-relations/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Core relations contract
+ 
+-`core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
++- `core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
+ 
+ Concurrency primitives live in `concurrency`, identifiers live in `numeric-id`, union-find storage lives in `union-find`, and main-crate adaptation lives in `egglog-bridge`.
+ 
+diff --git a/egglog-bridge/AGENTS.md b/egglog-bridge/AGENTS.md
+index 6dbc55187f1b2cf237ff175021fe57ffcd69e6ce..2b1d34b56a4744eada98ec2c586379e0932b3127
+--- a/egglog-bridge/AGENTS.md
++++ b/egglog-bridge/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Bridge contract
+ 
+-`egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
++- `egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
+ 
+ The database implementation remains owned by `core-relations`; language parsing, desugaring, proofs, type checking, and lowering remain owned by `src`.
+ 
+diff --git a/src/AGENTS.md b/src/AGENTS.md
+index 8564608ac2334ac2356ac88dda196df34e9e2616..4103e5efed3a84ae5f36eae1e4a6f8434761c1ea
+--- a/src/AGENTS.md
++++ b/src/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Main crate contract
+ 
+-The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
++- The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
+ 
+ Start with `src/lib.md` for the language and Rust API entry points. The `src/sort/add_primitive` package owns the `egglog-add-primitive` procedural macro; backing database implementation lives in `core-relations`, and its main-crate adapter lives in `egglog-bridge`.
+ 
+diff --git a/tests/AGENTS.md b/tests/AGENTS.md
+index 1a99da0f615b2e1940efd7d632b70b3320ec9153..abd6f57fdb54c8fa4cbe3ef89bb8df91321d0eef
+--- a/tests/AGENTS.md
++++ b/tests/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Test corpus contract
+ 
+-The `tests` folder contains a list of example egglog programs.
++- The `tests` folder contains a list of example egglog programs.
+ 
+ `tests/fail-typecheck` owns programs expected to fail type checking, `tests/pass-typecheck` owns programs expected to pass it, `tests/header` owns shared input headers, `tests/proofs` owns proof examples, and `tests/web-demo` owns browser-demo fixtures. Snapshot output lives in `tests/snapshots` and is regenerated through the repository's test harness rather than edited as independent source.
+ 
+
+codex
+Restored all four missing lines verbatim in their owning area files:
+
+- `src/AGENTS.md`
+- `core-relations/AGENTS.md`
+- `egglog-bridge/AGENTS.md`
+- `tests/AGENTS.md`
+
+Verification:
+
+- Layer gate: `PASS — layer clean · boot ≈ 1970 tokens/session`
+- `git diff --check`: clean
+- Only `.md` files are modified/untracked
+- Nothing pushed
+
+`make fixnits` could not start because the sandbox blocks rustup from writing under `~/.rustup`; no files were changed by that attempt.
+diff --git a/core-relations/AGENTS.md b/core-relations/AGENTS.md
+index 40672226fbe5cb2094220a0750d179c97ed35150..209641524bb6a03030dead7676ef749ef6a8e429
+--- a/core-relations/AGENTS.md
++++ b/core-relations/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Core relations contract
+ 
+-`core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
++- `core-relations` is the backing database implementation. It supports both parallel and serial modes. By default, it runs in serial mode and uses only a single thread.
+ 
+ Concurrency primitives live in `concurrency`, identifiers live in `numeric-id`, union-find storage lives in `union-find`, and main-crate adaptation lives in `egglog-bridge`.
+ 
+diff --git a/egglog-bridge/AGENTS.md b/egglog-bridge/AGENTS.md
+index 6dbc55187f1b2cf237ff175021fe57ffcd69e6ce..2b1d34b56a4744eada98ec2c586379e0932b3127
+--- a/egglog-bridge/AGENTS.md
++++ b/egglog-bridge/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Bridge contract
+ 
+-`egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
++- `egglog-bridge` is the bridge between the main crate and the core-relations, and provides abstractions/utility for rules, union-find, rows, etc.
+ 
+ The database implementation remains owned by `core-relations`; language parsing, desugaring, proofs, type checking, and lowering remain owned by `src`.
+ 
+diff --git a/src/AGENTS.md b/src/AGENTS.md
+index 8564608ac2334ac2356ac88dda196df34e9e2616..4103e5efed3a84ae5f36eae1e4a6f8434761c1ea
+--- a/src/AGENTS.md
++++ b/src/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Main crate contract
+ 
+-The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
++- The main `egglog` crate has the source code under `./src/` and is concerned with parsing, desugaring, proofs, type checking, and lowering.
+ 
+ Start with `src/lib.md` for the language and Rust API entry points. The `src/sort/add_primitive` package owns the `egglog-add-primitive` procedural macro; backing database implementation lives in `core-relations`, and its main-crate adapter lives in `egglog-bridge`.
+ 
+diff --git a/tests/AGENTS.md b/tests/AGENTS.md
+index 1a99da0f615b2e1940efd7d632b70b3320ec9153..abd6f57fdb54c8fa4cbe3ef89bb8df91321d0eef
+--- a/tests/AGENTS.md
++++ b/tests/AGENTS.md
+@@ -3,7 +3,7 @@
+ 
+ # Test corpus contract
+ 
+-The `tests` folder contains a list of example egglog programs.
++- The `tests` folder contains a list of example egglog programs.
+ 
+ `tests/fail-typecheck` owns programs expected to fail type checking, `tests/pass-typecheck` owns programs expected to pass it, `tests/header` owns shared input headers, `tests/proofs` owns proof examples, and `tests/web-demo` owns browser-demo fixtures. Snapshot output lives in `tests/snapshots` and is regenerated through the repository's test harness rather than edited as independent source.
+ 
+
+tokens used
+23,340
+Restored all four missing lines verbatim in their owning area files:
+
+- `src/AGENTS.md`
+- `core-relations/AGENTS.md`
+- `egglog-bridge/AGENTS.md`
+- `tests/AGENTS.md`
+
+Verification:
+
+- Layer gate: `PASS — layer clean · boot ≈ 1970 tokens/session`
+- `git diff --check`: clean
+- Only `.md` files are modified/untracked
+- Nothing pushed
+
+`make fixnits` could not start because the sandbox blocks rustup from writing under `~/.rustup`; no files were changed by that attempt.

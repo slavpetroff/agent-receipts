@@ -1,0 +1,148 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a0374a-bd4c-7d82-98b4-88962f926553
+--------
+user
+A past change to this repository was described as: "feat(qbuploadlimiter): 同步至 v1.3.18 (#1158)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 34cde121
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the historical change, read the applicable repository instructions, then make exactly the requested one-line edit. I won’t run builds or tests. I’m using the required `using-superpowers` skill to follow the workspace’s skill-selection rules.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && git log --all --oneline --grep='feat(qbuploadlimiter): 同步至 v1.3.18 (#1158)'" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc "git show --stat --oneline --format=fuller 34cde12 && git show --name-only --format='' 34cde12" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/inst
+ succeeded in 0ms:
+commit 34cde12
+Author:     xlmc <dntx1314@gmail.com>
+AuthorDate: Sat Aug 22 14:35:39 2026 +0800
+Commit:     GitHub <noreply@github.com>
+CommitDate: Sat Aug 22 14:35:39 2026 +0800
+
+    feat(qbuploadlimiter): 同步至 v1.3.18 (#1158)
+
+ package.v2.json                        |   9 +-
+ plugins.v2/qbuploadlimiter/__init__.py | 393 ++++++++++++++++++++++++++-------
+ 2 files changed, 326 insertions(+), 76 deletions(-)
+package.v2.json
+plugins.v2/qbuploadlimiter/__init__.py
+
+exec
+/bin/zsh -lc "sed -n '1,260p' plugins.v2/AGENTS.md && sed -n '1,24p' plugins.v2/qbuploadlimiter/__init__.py && git status --short" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-25
+
+# V2 plugin contract
+
+- `plugins.v2/<plugin_id>/` owns V2-specific source, while `package.v2.json` owns its marketplace metadata because V2 resolves its dedicated index before compatible default-index entries.
+- Apply `AGENTS.md`'s shared conventions to V2 identities, frontend entry points, and checks because cross-generation boilerplate has one home.
+- Keep V2 implementations here when V3 has a distinct contract, and mark the old index entry `v3: false`, because V3 must not fall back to an incompatible implementation.
+- Do not put centralized tests here; `tests/v2/<plugin_id>/` owns them because plugin directories are copied into installed runtime instances.
+
+## Architecture record index
+
+| record | pointer |
+| --- | --- |
+| Agent Resource Officer architecture | `plugins.v2/agentresourceofficer/ARCHITECTURE.md` |
+| AI Recognizer Enhancer architecture | `plugins.v2/airecognizerenhancer/ARCHITECTURE.md` |
+
+For V2 executable checks, use the root legend's automation pointers because their configuration owns the rules.
+"""
+QB上传限速插件（MoviePilot v2/v3）。
+
+功能：
+1. 定时轮询已选下载器（qBittorrent / Transmission）中的种子；
+2. 仅处理 MoviePilot 已「整理入库成功」的种子：种子入库成功前对插件完全不可见，不监控、不限速（等同于插件未开启），入库成功后才按分享率限速；
+3. 种子分享率（上传量 / 下载量）达到全局或站点单独阈值后，自动限制该种子上传速度为指定值（KB/s）；qBittorrent 全局上传限速更低时自动采用全局值，上传速度填 0 时不做限速处理；
+4. 支持按站点筛选和按站点单独设置分享率阈值；未配置单独阈值的站点回退使用全局阈值；
+5. 可选 AI 智能限速：调用系统设置中已配置的大模型（智能体），按「种子分享率、上传活跃度、站点账号分享率」逐种子智能决策限速值与是否限速，仅在种子活跃（有实际上传流量）时评估，休眠种子自动跳过；大模型未配置/调用失败/输出解析失败时自动回退常规分享率阈值限速，无需在本插件配置任何 API 密钥；
+6. 停用或卸载插件时，自动将本插件限速过的种子恢复为不限速；
+7. 限速通知支持多选 MoviePilot 已启用通知渠道，测试通知仅首次发送；
+8. 支持监控超时取消：下载完成后达不到限速值、或限速后持续超时/速度低于限速值 80% 时，取消监控并立即恢复该种子不限速。
+"""
+
+import asyncio
+import datetime
+import inspect
+import json
+import threading
+import time
+from decimal import Decimal, ROUND_HALF_UP
+from typing import Any, Dict, List, Optional, Set, Tuple
+from urllib.parse import urlparse
+
+
+codex
+The matching commit updates marketplace metadata plus one implementation file; the actual feature change lives in `plugins.v2/qbuploadlimiter/__init__.py`. I’ll add the Python comment there and leave the metadata untouched.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/inst/plugins.v2/qbuploadlimiter/__init__.py
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a4602d162931664ccda7137e7b92f4f673..a2e9af5af3e3beff5d65524ba0382e88e9909f9a
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a4602d162931664ccda7137e7b92f4f673..a2e9af5af3e3beff5d65524ba0382e88e9909f9a
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+
+exec
+/bin/zsh -lc 'git diff -- plugins.v2/qbuploadlimiter/__init__.py && git status --short' in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/inst
+ succeeded in 0ms:
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a..a2e9af5 100644
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+ M plugins.v2/qbuploadlimiter/__init__.py
+
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a4602d162931664ccda7137e7b92f4f673..a2e9af5af3e3beff5d65524ba0382e88e9909f9a
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+
+codex
+Added `# touched 34cde121` at the top of [plugins.v2/qbuploadlimiter/__init__.py](~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/inst/plugins.v2/qbuploadlimiter/__init__.py:1). No builds or tests were run.
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a4602d162931664ccda7137e7b92f4f673..a2e9af5af3e3beff5d65524ba0382e88e9909f9a
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+
+tokens used
+16,152
+Added `# touched 34cde121` at the top of [plugins.v2/qbuploadlimiter/__init__.py](~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/inst/plugins.v2/qbuploadlimiter/__init__.py:1). No builds or tests were run.

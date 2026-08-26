@@ -1,0 +1,331 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a0359d-cba7-78b3-b537-f391d553283a
+--------
+user
+A past change to this repository was described as: "fix filterFunction (#1371)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 552e6621
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the historical change and repository instructions, then make exactly the requested one-line edit without running tests or builds.
+exec
+/bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g '"'!node_modules'"' .. . && sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+I’m using the repository’s required workflow guidance to keep the history lookup and edit tightly scoped.
+exec
+/bin/zsh -lc "ls -la && find .. -name AGENTS.md -print && if [ -f AGENTS.md ]; then sed -n '1,240p' AGENTS.md; fi && git log --all --oneline --decorate --grep='fix filterFunction (#1371)'" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+total 816
+drwxr-xr-x  32 user  staff    1024 Aug 24 23:39 .
+drwxr-xr-x   4 user  staff     128 Aug 24 23:39 ..
+-rw-r--r--   1 user  staff     242 Aug 24 23:39 .editorconfig
+-rw-r--r--   1 user  staff     108 Aug 24 23:39 .git
+-rw-r--r--   1 user  staff      83 Aug 24 23:39 .gitattributes
+drwxr-xr-x   7 user  staff     224 Aug 24 23:39 .github
+-rw-r--r--   1 user  staff    1033 Aug 24 23:39 .gitignore
+-rw-r--r--   1 user  staff      77 Aug 24 23:39 .markdownlint.json
+-rw-r--r--   1 user  staff     165 Aug 24 23:39 .npmignore
+-rw-r--r--   1 user  staff       9 Aug 24 23:39 .nvmrc
+-rw-r--r--   1 user  staff     133 Aug 24 23:39 .prettierrc.js
+-rw-r--r--   1 user  staff     181 Aug 24 23:39 .stylelintrc
+drwxr-xr-x   4 user  staff     128 Aug 24 23:39 .vscode
+drwxr-xr-x   3 user  staff      96 Aug 24 23:39 apps
+-rw-r--r--   1 user  staff   21301 Aug 24 23:39 CHANGELOG.md
+-rw-r--r--   1 user  staff    6987 Aug 24 23:39 CLAUDE.md
+-rw-r--r--   1 user  staff    3228 Aug 24 23:39 CODE-OF-CONDUCT.md
+-rw-r--r--   1 user  staff    1463 Aug 24 23:39 CONTRIBUTING.md
+-rw-r--r--   1 user  staff    1588 Aug 24 23:39 eslint.config.js
+-rw-r--r--   1 user  staff   11343 Aug 24 23:39 LICENSE
+-rw-r--r--   1 user  staff     860 Aug 24 23:39 netlify.toml
+-rw-r--r--   1 user  staff  280970 Aug 24 23:39 package-lock.json
+-rw-r--r--   1 user  staff    2942 Aug 24 23:39 package.json
+-rw-r--r--   1 user  staff    5874 Aug 24 23:39 README.md
+drwxr-xr-x   3 user  staff      96 Aug 24 23:39 scripts
+-rw-r--r--   1 user  staff    1072 Aug 24 23:39 SECURITY.md
+drwxr-xr-x  20 user  staff     640 Aug 24 23:39 src
+-rw-r--r--   1 user  staff     781 Aug 24 23:39 SUPPORT.md
+-rw-r--r--   1 user  staff     694 Aug 24 23:39 tsconfig.json
+-rw-r--r--   1 user  staff     166 Aug 24 23:39 tsconfig.test.json
+-rw-r--r--   1 user  staff    1237 Aug 24 23:39 tsup.config.ts
+-rw-r--r--   1 user  staff     470 Aug 24 23:39 vitest.config.ts
+../inst/.github/AGENTS.md
+../inst/AGENTS.md
+../inst/apps/docs/AGENTS.md
+../inst/src/AGENTS.md
+552e662 fix filterFunction (#1371)
+
+exec
+/bin/zsh -lc 'git show --stat --oneline --format=fuller 552e662 && git show --format= --name-only 552e662 && git status --short' in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+commit 552e662
+Author:     John Betancur <1385932+jbetancur@users.noreply.github.com>
+AuthorDate: Tue Jul 21 20:53:55 2026 -0400
+Commit:     GitHub <noreply@github.com>
+CommitDate: Tue Jul 21 20:53:55 2026 -0400
+
+    fix filterFunction (#1371)
+
+ src/__tests__/useColumnFilter.test.ts | 60 +++++++++++++++++++++++++++++++++++
+ src/hooks/useColumnFilter.ts          | 49 +++++++++++++++++++++++++---
+ 2 files changed, 105 insertions(+), 4 deletions(-)
+src/__tests__/useColumnFilter.test.ts
+src/hooks/useColumnFilter.ts
+
+exec
+/bin/zsh -lc "git show --format=fuller --find-renames 552e662 -- src/hooks/useColumnFilter.ts src/__tests__/useColumnFilter.test.ts | sed -n '1,260p'" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+commit 552e6621d6b914a3234cbd8719ceb90228821df4
+Author:     John Betancur <1385932+jbetancur@users.noreply.github.com>
+AuthorDate: Tue Jul 21 20:53:55 2026 -0400
+Commit:     GitHub <noreply@github.com>
+CommitDate: Tue Jul 21 20:53:55 2026 -0400
+
+    fix filterFunction (#1371)
+
+diff --git a/src/__tests__/useColumnFilter.test.ts b/src/__tests__/useColumnFilter.test.ts
+index 30bb36d..6831ae7 100644
+--- a/src/__tests__/useColumnFilter.test.ts
++++ b/src/__tests__/useColumnFilter.test.ts
+@@ -185,6 +185,22 @@ describe('useColumnFilter:date operators', () => {
+ 		expect(setFilter({ condition1: { operator: 'after', value: '2024-12-31' } }).map(r => r.id)).toEqual([3]);
+ 	});
+ 
++	test('equals matches the calendar day even when the cell carries a time (no TZ skew)', () => {
++		type WithTime = { id: number; d: string };
++		const cols: TableColumn<WithTime>[] = [
++			{ id: 'd', name: 'D', selector: r => r.d, filterable: true, filterType: 'date' },
++		];
++		const rows: WithTime[] = [
++			{ id: 1, d: '2024-03-15T00:30:00' },
++			{ id: 2, d: '2024-03-15T23:45:00' },
++			{ id: 3, d: '2024-03-16T10:00:00' },
++		];
++		const { result } = renderHook(() =>
++			useColumnFilter<WithTime>(cols, { d: { condition1: { operator: 'equals', value: '2024-03-15' } } }),
++		);
++		expect(result.current.filteredData(rows).map(r => r.id)).toEqual([1, 2]);
++	});
++
+ 	test('equals matches rows on the same calendar day', () => {
+ 		expect(setFilter({ condition1: { operator: 'equals', value: '2024-01-01' } }).map(r => r.id)).toEqual([1, 4]);
+ 	});
+@@ -370,4 +386,48 @@ describe('useColumnFilter:custom filterFunction', () => {
+ 
+ 		expect(result.current.filteredData(data).map(r => r.name)).toEqual(['Banana', 'Cherry']);
+ 	});
++
++	test('runs for a value-less operator (built-in isFilterActive would skip it)', () => {
++		let calls = 0;
++		const custom: TableColumn<Row>[] = [
++			{
++				id: 'name',
++				name: 'Name',
++				selector: r => r.name,
++				filterable: true,
++				filterFunction: row => {
++					calls++;
++					return row.name.length === 5;
++				},
++			},
++		];
++
++		const { result } = renderHook(() =>
++			useColumnFilter<Row>(custom, { name: { condition1: { operator: 'startsWith' } } }),
++		);
++
++		expect(result.current.filteredData(data).map(r => r.name)).toEqual(['Apple']);
++		expect(calls).toBeGreaterThan(0);
++	});
++
++	test('does not run once its filter is cleared back to the empty default', () => {
++		let calls = 0;
++		const custom: TableColumn<Row>[] = [
++			{
++				id: 'name',
++				name: 'Name',
++				selector: r => r.name,
++				filterable: true,
++				filterFunction: () => {
++					calls++;
++					return false;
++				},
++			},
++		];
++
++		const { result } = renderHook(() => useColumnFilter<Row>(custom, { name: emptyFilterState('text') }));
++
++		expect(result.current.filteredData(data)).toHaveLength(data.length);
++		expect(calls).toBe(0);
++	});
+ });
+diff --git a/src/hooks/useColumnFilter.ts b/src/hooks/useColumnFilter.ts
+index 590d64b..b53a630 100644
+--- a/src/hooks/useColumnFilter.ts
++++ b/src/hooks/useColumnFilter.ts
+@@ -25,6 +25,20 @@ export function emptyFilterState(filterType: FilterType = 'text'): FilterState {
+ 	return { condition1: { operator: op } };
+ }
+ 
++// True when a filter carries nothing a consumer could have intended — the default
++// operator for its type, no values, and no second condition. Used to tell an
++// applied-but-cleared filterFunction filter from an intentional value-less one.
++function isEmptyFilter(filter: FilterState, filterType: FilterType = 'text'): boolean {
++	const { operator, value, value2 } = filter.condition1;
++	const defaultOp: FilterOperator = filterType === 'text' ? 'contains' : 'equals';
++	return (
++		operator === defaultOp &&
++		(value?.trim() ?? '') === '' &&
++		(value2?.trim() ?? '') === '' &&
++		filter.condition2 === undefined
++	);
++}
++
+ function isConditionActive(condition: FilterCondition): boolean {
+ 	if (condition.operator === 'blank' || condition.operator === 'notBlank') return true;
+ 	if (condition.operator === 'between' && (condition.value2?.trim() ?? '') !== '') return true;
+@@ -35,6 +49,19 @@ export function isFilterActive(filter: FilterState): boolean {
+ 	return isConditionActive(filter.condition1) || (!!filter.condition2 && isConditionActive(filter.condition2));
+ }
+ 
++// The calendar day (YYYY-MM-DD) of a date-ish string, timezone-agnostically.
++// An ISO date prefix is used verbatim so "2024-03-15" and "2024-03-15T00:30"
++// yield the same day; anything else falls back to the local day of a parsed Date.
++function calendarDay(raw: string): string | null {
++	const iso = raw.match(/^(\d{4}-\d{2}-\d{2})/);
++	if (iso) return iso[1];
++	const d = new Date(raw);
++	if (isNaN(d.getTime())) return null;
++	const m = String(d.getMonth() + 1).padStart(2, '0');
++	const day = String(d.getDate()).padStart(2, '0');
++	return `${d.getFullYear()}-${m}-${day}`;
++}
++
+ // Seconds since midnight for a clock time, ignoring any date component.
+ // Accepts a bare time ("17:30", "17:30:45") or a full timestamp whose time
+ // portion is extracted ("2024-01-01T17:30:00", "2024-01-01 17:30"). Returns
+@@ -111,8 +138,12 @@ function applyCondition(condition: FilterCondition, cellValue: string, filterTyp
+ 		const d2 = new Date(value2);
+ 		switch (operator) {
+ 			case 'equals':
+-				// date matches the whole calendar day; datetime matches the exact instant
+-				return filterType === 'datetime' ? d.getTime() === d1.getTime() : d.toDateString() === d1.toDateString();
++				// datetime matches the exact instant; date matches the calendar day.
++				// For the day comparison we compare the ISO Y-M-D of each side rather
++				// than parsed Date objects: a bare "2024-03-15" parses as UTC midnight
++				// while "2024-03-15T00:30" parses as local, so toDateString() on the
++				// two disagrees by a day in non-UTC zones. Comparing day strings avoids it.
++				return filterType === 'datetime' ? d.getTime() === d1.getTime() : calendarDay(cellValue) === calendarDay(value);
+ 			case 'before':
+ 				return d < d1;
+ 			case 'after':
+@@ -190,9 +221,19 @@ export default function useColumnFilter<T>(
+ 		[onFilterChangeProp],
+ 	);
+ 
++	// A filter is active if it matches values the built-in matcher understands, OR
++	// the column supplies a filterFunction and the condition is anything other than
++	// the pristine empty default — a custom function owns its own activation logic,
++	// so it must run even for value-less operators the built-in heuristic ignores.
+ 	const activeFilters = React.useMemo(
+-		() => (Object.entries(filterValues) as [string, FilterState][]).filter(([, v]) => isFilterActive(v)),
+-		[filterValues],
++		() =>
++			(Object.entries(filterValues) as [string, FilterState][]).filter(([colId, v]) => {
++				if (isFilterActive(v)) return true;
++				const col = columns.find(c => String(c.id) === colId);
++				if (!col?.filterFunction) return false;
++				return !isEmptyFilter(v, col.filterType);
++			}),
++		[filterValues, columns],
+ 	);
+ 
+ 	const filteredData = React.useCallback(
+
+exec
+/bin/zsh -lc "sed -n '1,12p' src/hooks/useColumnFilter.ts" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+import * as React from 'react';
+import type { TableColumn, FilterState, FilterCondition, FilterOperator, FilterType, Localization } from '../types';
+
+/**
+ * Column-filter feature slice — the head-side transport for filter state.
+ * `filterValues` changes identity per applied filter (legitimate re-render);
+ * DataTableHead extracts each column's own value so TableCol memoization
+ * stays per-column.
+ */
+export type FilteringSlice = {
+	filterValues: Record<string | number, FilterState>;
+	localization: NonNullable<Localization['filter']>;
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org/src/hooks/useColumnFilter.ts
+diff --git a/src/hooks/useColumnFilter.ts b/src/hooks/useColumnFilter.ts
+index b53a630f0978be5118512130ab05d10bd6067449..ad41f090a8bf2929103173515089b1c8789e4375
+--- a/src/hooks/useColumnFilter.ts
++++ b/src/hooks/useColumnFilter.ts
+@@ -1,3 +1,4 @@
++// touched 552e6621
+ import * as React from 'react';
+ import type { TableColumn, FilterState, FilterCondition, FilterOperator, FilterType, Localization } from '../types';
+ 
+
+diff --git a/src/hooks/useColumnFilter.ts b/src/hooks/useColumnFilter.ts
+index b53a630f0978be5118512130ab05d10bd6067449..ad41f090a8bf2929103173515089b1c8789e4375
+--- a/src/hooks/useColumnFilter.ts
++++ b/src/hooks/useColumnFilter.ts
+@@ -1,3 +1,4 @@
++// touched 552e6621
+ import * as React from 'react';
+ import type { TableColumn, FilterState, FilterCondition, FilterOperator, FilterType, Localization } from '../types';
+ 
+
+exec
+/bin/zsh -lc 'git diff -- src/hooks/useColumnFilter.ts && git status --short' in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org
+ succeeded in 0ms:
+diff --git a/src/hooks/useColumnFilter.ts b/src/hooks/useColumnFilter.ts
+index b53a630..ad41f09 100644
+--- a/src/hooks/useColumnFilter.ts
++++ b/src/hooks/useColumnFilter.ts
+@@ -1,3 +1,4 @@
++// touched 552e6621
+ import * as React from 'react';
+ import type { TableColumn, FilterState, FilterCondition, FilterOperator, FilterType, Localization } from '../types';
+ 
+ M src/hooks/useColumnFilter.ts
+
+diff --git a/src/hooks/useColumnFilter.ts b/src/hooks/useColumnFilter.ts
+index b53a630f0978be5118512130ab05d10bd6067449..ad41f090a8bf2929103173515089b1c8789e4375
+--- a/src/hooks/useColumnFilter.ts
++++ b/src/hooks/useColumnFilter.ts
+@@ -1,3 +1,4 @@
++// touched 552e6621
+ import * as React from 'react';
+ import type { TableColumn, FilterState, FilterCondition, FilterOperator, FilterType, Localization } from '../types';
+ 
+
+codex
+Added `// touched 552e6621` to the top of [useColumnFilter.ts](~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org/src/hooks/useColumnFilter.ts:1). No builds or tests run.
+diff --git a/src/hooks/useColumnFilter.ts b/src/hooks/useColumnFilter.ts
+index b53a630f0978be5118512130ab05d10bd6067449..ad41f090a8bf2929103173515089b1c8789e4375
+--- a/src/hooks/useColumnFilter.ts
++++ b/src/hooks/useColumnFilter.ts
+@@ -1,3 +1,4 @@
++// touched 552e6621
+ import * as React from 'react';
+ import type { TableColumn, FilterState, FilterCondition, FilterOperator, FilterType, Localization } from '../types';
+ 
+
+tokens used
+34,379
+Added `// touched 552e6621` to the top of [useColumnFilter.ts](~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/org/src/hooks/useColumnFilter.ts:1). No builds or tests run.

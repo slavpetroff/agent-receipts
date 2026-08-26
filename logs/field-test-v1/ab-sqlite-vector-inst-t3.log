@@ -1,0 +1,175 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a035b5-426a-7790-8427-71c5859c2a15
+--------
+user
+A past change to this repository was described as: "fix: memory safety, SQL injection and ORDER BY in the extension core"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched e0353ddf
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the historical change, identify its single implementation file, and make only the requested comment edit. I’ll follow the repository’s code-work guidance and won’t run builds or tests.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && git log --all --oneline --decorate --grep='fix: memory safety, SQL injection and ORDER BY in the extension core'" in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+I found the matching commit (`e0353dd`). I’m now checking its file list and the routed instructions for the affected area before applying the one-line change.
+exec
+/bin/zsh -lc "git show --stat --oneline --format=fuller e0353dd && git show --name-only --format='' e0353dd" in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+commit e0353dd
+Author:     Marco Bambini <marco@creolabs.com>
+AuthorDate: Mon Aug 24 18:22:56 2026 +0200
+Commit:     Marco Bambini <marco@creolabs.com>
+CommitDate: Mon Aug 24 18:22:56 2026 +0200
+
+    fix: memory safety, SQL injection and ORDER BY in the extension core
+    
+    Eight defects found by a full read of the sources, each reproduced by compiling
+    and running the tree before being fixed.
+    
+    Crashes:
+    
+    * An unsupported (distance, type) pair called a NULL function pointer. The
+      dispatch table only implements HAMMING for BIT vectors, but distance=hamming
+      was accepted for any type. vector_init now rejects the pair up front, and all
+      five dispatch sites go through a bounds-checked lookup so a future gap in the
+      table becomes an error rather than a segfault.
+    
+    * A query vector supplied as a BLOB was never length-checked, so the kernels
+      read v_dim elements from whatever the caller passed. The JSON branch already
+      validated the dimension; the BLOB branch now does too.
+    
+    Memory safety (all four reproduced under ASan):
+    
+    * The U8/I8/1BIT quantized scans decoded rows on trust. vector0_* is an ordinary
+      writable table, so a truncated blob or an inflated counter walked off the end.
+      All four paths now carry the same length guard the TurboQuant paths had, and
+      the non-TurboQuant streaming cursor - which never recorded the buffer length
+      at all - now tracks it.
+    
+    * vector_quantize_preload sized its buffer from SUM(LENGTH(data)) and filled it
+      with no per-row bound and an int offset. No race is needed to trigger it:
+      LENGTH() counts characters on a TEXT value while sqlite3_column_bytes()
+      returns UTF-8 bytes, so multi-byte text in the data column makes the SUM
+      under-report - ASan reports a 2400-byte write past a 1200-byte buffer. Copies
+      are now bounded, offsets are 64-bit, and the loaded rows must hold the number
+      of vectors they claim before the index is published.
+    
+    * The preloaded index was written and freed under qmutex but read without it,
+      and locking the read would not have been enough: a streaming cursor holds the
+      pointer across many xNext calls, so vector_quantize_cleanup() freed it
+      mid-scan on a single thread. The index is now reference counted; scans hold a
+      reference while they walk it and preload/cleanup swap the table's copy without
+      touching what a live cursor is reading.
+    
+    * sqlite3_vector_init freed the context by hand on its error path even though
+      sqlite3_create_function_v2() had already taken ownership - and SQLite invokes
+      the destructor when that call itself fails, so the second free landed
+      immediately. Injecting an allocation failure at each of 400 points inside init
+      crashed at 23 of them; the sweep is now clean.
+    
+    Correctness:
+    
+    * Identifiers were interpolated with %q, which escapes string literals and does
+      nothing for ';' or '"'. A table named x;DROP TABLE victim;-- injected
+      statements through vector_quantize_cleanup, which runs its DROP outside any
+      savepoint. All nine identifier positions now use %w inside explicit double
+      quotes; generate_quant_table_name switched to %s because it builds a bare name
+      that is bound as a parameter. Generated SQL for ordinary names is unchanged,
+      and names like order-items or "my vec" now work instead of failing with a
+      syntax error.
+    
+    * vFullScanBestIndex asserted orderByConsumed unconditionally, so SQLite dropped
+      the sorter and every ORDER BY on the table-valued function was silently
+      ignored - including ORDER BY distance DESC. It is now claimed only for a
+      single ascending ORDER BY on the distance column.
+    
+    Also adds the cosine shortcut behind normalized=1: for unit-length FLOAT32
+    vectors cosine distance is 1 - dot, which drops two thirds of the arithmetic
+    from the inner loop. The query is normalized once per scan so the result is
+    exact rather than merely rank-equivalent, and quantized scans ignore the flag
+    because the quantized index holds scaled integers whose norm is not 1.
+    
+    Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+ src/sqlite-vector.c | 342 +++++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 271 insertions(+), 71 deletions(-)
+src/sqlite-vector.c
+
+exec
+/bin/zsh -lc "sed -n '1,260p' src/AGENTS.md && sed -n '1,240p' ~/.agents/skills/verification-before-completion/SKILL.md && sed -n '1,12p' src/sqlite-vector.c" in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+The change lives only in `src/sqlite-vector.c`, whose existing header uses `//` comments. I’m adding the exact text as the first line; the verification will be limited to inspecting the diff, as requested.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst/src/sqlite-vector.c
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c60c73d46ed19837f59caf06966fd90e5dd..cc371bb68ef92ae5c0691b61eb2fd5bbad40490e
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched e0353dd
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c60c73d46ed19837f59caf06966fd90e5dd..cc371bb68ef92ae5c0691b61eb2fd5bbad40490e
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched e0353dd
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+
+exec
+/bin/zsh -lc 'git diff --check && git diff -- src/sqlite-vector.c && git status --short' in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c6..cc371bb 100644
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched e0353dd
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+ M src/sqlite-vector.c
+
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c60c73d46ed19837f59caf06966fd90e5dd..cc371bb68ef92ae5c0691b61eb2fd5bbad40490e
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched e0353dd
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+
+codex
+Added `// touched e0353dd` at the top of [src/sqlite-vector.c](~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst/src/sqlite-vector.c:1). No builds or tests were run.
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c60c73d46ed19837f59caf06966fd90e5dd..cc371bb68ef92ae5c0691b61eb2fd5bbad40490e
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched e0353dd
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+
+tokens used
+31,061
+Added `// touched e0353dd` at the top of [src/sqlite-vector.c](~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst/src/sqlite-vector.c:1). No builds or tests were run.

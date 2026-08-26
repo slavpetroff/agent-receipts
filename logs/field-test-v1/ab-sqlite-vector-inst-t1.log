@@ -1,0 +1,164 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a035b3-fefe-75c1-b08c-bebf98453811
+--------
+user
+A past change to this repository was described as: "perf: keep the top-k candidates in a heap"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched b52880bf
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m using the required skill workflow to locate the historical change, then I’ll make exactly the requested one-line edit without running builds or tests.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md" in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc "git log --all --oneline --grep='perf: keep the top-k candidates in a heap' --fixed-strings" in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+b52880b perf: keep the top-k candidates in a heap
+
+exec
+/bin/zsh -lc "git show --stat --oneline --format=fuller b52880b && git show --name-only --format='' b52880b" in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+commit b52880b
+Author:     Marco Bambini <marco@creolabs.com>
+AuthorDate: Mon Aug 24 22:14:59 2026 +0200
+Commit:     Marco Bambini <marco@creolabs.com>
+CommitDate: Mon Aug 24 22:15:05 2026 +0200
+
+    perf: keep the top-k candidates in a heap
+    
+    Every accepted candidate triggered an O(k) rescan of all k slots to find the new
+    worst entry, and the final ordering was an O(k^2) exchange sort. For a scan where
+    the distance itself is cheap - 1-bit Hamming over a preloaded index is 96 bytes
+    of popcount per row - that bookkeeping was the query.
+    
+    The candidate set is now a binary max-heap over (distance, rowid) in the parallel
+    arrays the cursor already owns: the root is the worst entry still in the set, so
+    admitting a candidate is one comparison plus O(log k), and the final ordering is
+    a heapsort in place. 20k rows, dim 768, 1BIT preloaded, ms per query:
+    
+        k=10      0.06 -> 0.05
+        k=100     0.10 -> 0.06
+        k=1000    3.17 -> 0.16     20x
+        k=4000   33.46 -> 0.55     61x
+    
+    Small k is unchanged, as expected - there was never much to rescan.
+    
+    This also removes a latent out-of-bounds read. max_index was never reset between
+    filters, so a cursor reused with a smaller k (a correlated subquery, or a join
+    where k varies per row) indexed the reallocated array with a stale offset. A
+    heap root is always slot zero, so there is no index to go stale.
+    
+    Tie-breaking among equal distances changes: neither sort is stable and the old
+    order was not a guarantee. Across 144 top-k queries covering every distance,
+    quantization type, and both scan shapes, all 144 return the same multiset of
+    distances; 136 return the same rows in the same order, and the 8 that differ are
+    cases where several rows tie at the k-th distance and either choice is equally
+    correct.
+    
+    Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+
+ src/sqlite-vector.c | 116 +++++++++++++++++++++-------------------------------
+ 1 file changed, 46 insertions(+), 70 deletions(-)
+src/sqlite-vector.c
+
+exec
+/bin/zsh -lc "sed -n '1,240p' src/AGENTS.md && sed -n '1,12p' src/sqlite-vector.c" in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Extension implementation
+
+- Treat `src` as the native SQLite extension implementation boundary because language loaders and distribution metadata live under `packages`.
+- Preserve the public SQL behavior documented in `API.md` because downstream packages and applications depend on that contract.
+- Read `QUANTIZATION.md` before changing quantization formats, lifecycle, or scans because it owns that design body.
+- Use `Makefile` and `.github/workflows/main.yml` as build and CI authorities rather than restating enforced commands here.
+//
+//  sqlite-vector.c
+//  sqlitevector
+//
+//  Created by Marco Bambini on 16/06/25.
+//
+
+#include "fp16/fp16.h"
+#include "sqlite-vector.h"
+#include "distance-cpu.h"
+
+#include <math.h>
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst/src/sqlite-vector.c
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c60c73d46ed19837f59caf06966fd90e5dd..535ef3623da1625ab237d2ed21797c302f4fe941
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched b52880bf
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c60c73d46ed19837f59caf06966fd90e5dd..535ef3623da1625ab237d2ed21797c302f4fe941
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched b52880bf
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+
+codex
+The matching commit changes only `src/sqlite-vector.c`; I’ve added the requested comment as its first line. I’m doing a diff-only check now—no builds or tests.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/verification-before-completion/SKILL.md" in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc 'git diff -- src/sqlite-vector.c && git status --short' in ~/Projects/agentops-bench-work/field/sqlite-vector/.worktrees/inst
+ succeeded in 0ms:
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c6..535ef36 100644
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched b52880bf
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+ M src/sqlite-vector.c
+
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c60c73d46ed19837f59caf06966fd90e5dd..535ef3623da1625ab237d2ed21797c302f4fe941
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched b52880bf
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+
+codex
+Added `// touched b52880bf` as the first line of `src/sqlite-vector.c`. No builds or tests were run.
+diff --git a/src/sqlite-vector.c b/src/sqlite-vector.c
+index 0f7c8c60c73d46ed19837f59caf06966fd90e5dd..535ef3623da1625ab237d2ed21797c302f4fe941
+--- a/src/sqlite-vector.c
++++ b/src/sqlite-vector.c
+@@ -1,3 +1,4 @@
++// touched b52880bf
+ //
+ //  sqlite-vector.c
+ //  sqlitevector
+
+tokens used
+32,910
+Added `// touched b52880bf` as the first line of `src/sqlite-vector.c`. No builds or tests were run.

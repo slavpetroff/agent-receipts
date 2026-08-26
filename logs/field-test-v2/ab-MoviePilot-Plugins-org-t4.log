@@ -1,0 +1,192 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03747-122d-7253-b52f-fa964e765a5e
+--------
+user
+A past change to this repository was described as: "feat(qbuploadlimiter): 同步至 v1.3.18 (#1158)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 34cde121
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the referenced change in history, confirm the repository instructions, then make exactly the requested one-line edit. I won’t run builds or tests. I’m using the mandatory `using-superpowers` guidance for this repository session.
+exec
+/bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g '"'!**/.git/**'"' .. ~/.agents/skills/using-superpowers 2>/dev/null | head -50" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 0ms:
+~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+../inst/AGENTS.md
+../inst/plugins.v2/AGENTS.md
+../inst/tests/AGENTS.md
+../inst/plugins.v3/AGENTS.md
+../inst/docs/AGENTS.md
+../inst/plugins/AGENTS.md
+
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && find .. -maxdepth 2 -name AGENTS.md -print && git log --all --oneline --grep='feat(qbuploadlimiter): 同步至 v1.3.18 (#1158)'" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc 'git show --stat --oneline 34cde12 && git show --format= --name-only 34cde12 && git status --short' in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 0ms:
+34cde12 feat(qbuploadlimiter): 同步至 v1.3.18 (#1158)
+ package.v2.json                        |   9 +-
+ plugins.v2/qbuploadlimiter/__init__.py | 393 ++++++++++++++++++++++++++-------
+ 2 files changed, 326 insertions(+), 76 deletions(-)
+package.v2.json
+plugins.v2/qbuploadlimiter/__init__.py
+
+exec
+/bin/zsh -lc "ls -la | sed -n '1,80p'; sed -n '1,30p' plugins.v2/qbuploadlimiter/__init__.py; git show 34cde12 -- package.v2.json | sed -n '1,100p'" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 0ms:
+total 440
+drwxr-xr-x   19 user  staff    608 Aug 25 07:18 .
+drwxr-xr-x    4 user  staff    128 Aug 25 07:18 ..
+-rw-r--r--    1 user  staff    101 Aug 25 07:18 .git
+drwxr-xr-x    3 user  staff     96 Aug 25 07:18 .githooks
+drwxr-xr-x    5 user  staff    160 Aug 25 07:18 .github
+-rw-r--r--    1 user  staff   3178 Aug 25 07:18 .gitignore
+drwxr-xr-x    9 user  staff    288 Aug 25 07:18 docs
+drwxr-xr-x  447 user  staff  14304 Aug 25 07:18 icons
+-rw-r--r--    1 user  staff  35149 Aug 25 07:18 LICENSE
+-rw-r--r--    1 user  staff  43998 Aug 25 07:18 package.json
+-rw-r--r--    1 user  staff  80861 Aug 25 07:18 package.v2.json
+-rw-r--r--    1 user  staff  38680 Aug 25 07:18 package.v3.json
+drwxr-xr-x   81 user  staff   2592 Aug 25 07:18 plugins
+drwxr-xr-x   66 user  staff   2112 Aug 25 07:18 plugins.v2
+drwxr-xr-x   24 user  staff    768 Aug 25 07:18 plugins.v3
+-rw-r--r--    1 user  staff   1012 Aug 25 07:18 pytest.ini
+-rw-r--r--    1 user  staff   4614 Aug 25 07:18 README.md
+drwxr-xr-x    3 user  staff     96 Aug 25 07:18 scripts
+drwxr-xr-x   12 user  staff    384 Aug 25 07:18 tests
+"""
+QB上传限速插件（MoviePilot v2/v3）。
+
+功能：
+1. 定时轮询已选下载器（qBittorrent / Transmission）中的种子；
+2. 仅处理 MoviePilot 已「整理入库成功」的种子：种子入库成功前对插件完全不可见，不监控、不限速（等同于插件未开启），入库成功后才按分享率限速；
+3. 种子分享率（上传量 / 下载量）达到全局或站点单独阈值后，自动限制该种子上传速度为指定值（KB/s）；qBittorrent 全局上传限速更低时自动采用全局值，上传速度填 0 时不做限速处理；
+4. 支持按站点筛选和按站点单独设置分享率阈值；未配置单独阈值的站点回退使用全局阈值；
+5. 可选 AI 智能限速：调用系统设置中已配置的大模型（智能体），按「种子分享率、上传活跃度、站点账号分享率」逐种子智能决策限速值与是否限速，仅在种子活跃（有实际上传流量）时评估，休眠种子自动跳过；大模型未配置/调用失败/输出解析失败时自动回退常规分享率阈值限速，无需在本插件配置任何 API 密钥；
+6. 停用或卸载插件时，自动将本插件限速过的种子恢复为不限速；
+7. 限速通知支持多选 MoviePilot 已启用通知渠道，测试通知仅首次发送；
+8. 支持监控超时取消：下载完成后达不到限速值、或限速后持续超时/速度低于限速值 80% 时，取消监控并立即恢复该种子不限速。
+"""
+
+import asyncio
+import datetime
+import inspect
+import json
+import threading
+import time
+from decimal import Decimal, ROUND_HALF_UP
+from typing import Any, Dict, List, Optional, Set, Tuple
+from urllib.parse import urlparse
+
+import pytz
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from app.core.config import settings
+from app.helper.downloader import DownloaderHelper
+from app.helper.service import ServiceConfigHelper
+commit 34cde121bdb88a50e47f72e5873302305aed2f1b
+Author: xlmc <dntx1314@gmail.com>
+Date:   Sat Aug 22 14:35:39 2026 +0800
+
+    feat(qbuploadlimiter): 同步至 v1.3.18 (#1158)
+
+diff --git a/package.v2.json b/package.v2.json
+index 2a4241a..cd589be 100644
+--- a/package.v2.json
++++ b/package.v2.json
+@@ -1204,11 +1204,18 @@
+     "name": "QB上传限速",
+     "description": "仅处理 MoviePilot 已整理入库成功的种子：分享率达到全局或站点单独阈值后自动限制上传速度（qBittorrent 与全局上传限速取较小值）；可选 AI 智能限速——调用系统设置的大模型按种子分享率、上传活跃度与站点账号分享率逐种子智能决策限速；支持多下载器、站点筛选、定时检测，停用/卸载自动恢复不限速。",
+     "labels": "下载管理,Qbittorrent,Transmission,限速,分享率,站点,AI",
+-    "version": "1.3.11",
++    "version": "1.3.18",
+     "icon": "Qbittorrent_A.png",
+     "author": "xlmc",
+     "level": 1,
+     "history": {
++      "v1.3.18": "AI 账号分享率门槛值限定为正整数（0=不启用，浮点数视为无效回退 0），保持门槛语义清晰、避免小数阈值。同时修复 PR-Agent 审查发现的问题：①只认可本轮有效的 AI no_limit 决策，账号分享率降至门槛以下等不再参与 AI 评估的种子回退常规阈值规则，不再沿用决策缓存中的陈旧 no_limit 结论；②分享率阈值归一化改用十进制四舍五入（1.25 -> 1.3），修正内置 round 银行家舍入（1.25 -> 1.2）与表单承诺不符的偏差；③种子状态详情页限速值改为读取下载器中实际生效的限速，防抖维持现状与常规规则限速如实展示。",
++      "v1.3.17": "新增「AI 账号分享率门槛」：站点账号分享率达到设定值（0=不启用）才对该站种子生效 AI 智能限速决策，未达标或查不到账号分享率的站点回退常规阈值规则；用于高分享率账号（上传指标已充足）主动限速减上行流量，规避家宽被运营商限速。",
++      "v1.3.16": "AI 智能限速支持复核已限速种子（方案 A）：已限速种子也参与每轮 AI 评估，AI 可根据最新分享率/活跃度加限、减限或解限；加/减限带 20% 防抖（差异不显著维持现状、避免抖动），解限恢复不限速且不移入取消监控（后续仍可重新限速），修复「限速后 AI 失声、决策单向不可逆」的问题。",
++      "v1.3.15": "统一处理门槛为「入库成功」：不再额外判断种子是否真正下载完成，入库成功即进入分享率限速与 AI 评估流程（分享率阈值会自然挡掉下载中的种子）；种子状态机与限速/评估门槛完全对齐。「下载完成后监控超时」功能保留其独立的下载完成语义。",
++      "v1.3.14": "修复 AI 介入前后逻辑漏洞：①大模型配置缺失后降频重试探测，补配置后无需重新保存插件即可自动恢复 AI（原先会永久锁死）；②AI 失效（配置缺失/获取失败）时自动关闭种子状态详情页，避免页面继续误导；③新增「AI 不限速」种子状态，被 AI 判定不限速的活跃种子不再误显示为「待评估」。",
++      "v1.3.13": "修复 AI 智能限速逻辑疏漏：①活跃度快照更新顺序错误导致活跃判断恒为不活跃（AI 从未真正介入），现改为先判断后更新快照，窗口增量恢复正常；②AI 限速日志误把限速值当分享率阈值显示，现区分 AI 决策与阈值规则日志；③限频间隔内新活跃（尚未评估）的种子不再被跳过，自动回退阈值规则兜底，同时尊重 AI 的 no_limit 决策；④限频复用决策时丢弃超过一个评估间隔未刷新的过期缓存，避免陈旧结论。",
++      "v1.3.12": "分享率阈值（全局与站点单独）支持浮点数：允许最多 1 位小数（如 1.5），不能为 0、不能为负；0、负数或非法值自动回退默认值 1，多余小数位四舍五入。",
+       "v1.3.11": "开启 AI 智能限速（保存配置）时自动后台自检一次大模型连通性，结果写入插件日志：自检通过即视为 AI 生效、立即开启种子状态详情页；自检失败（未配置大模型/调用异常/返回空）则保持点击卡片直接进设置，限速继续回退常规分享率阈值规则。",
+       "v1.3.10": "新增种子状态详情页（彩蛋）：AI 智能限速成功生效（至少一次大模型调用并解析成功）后，点击插件卡片进入种子状态页面，展示顶部状态统计（待评估/限速中/恢复中/忽略）与每种子明细（下载器/名称/站点/状态/限速值/AI 决策原因）；AI 未启用或未成功生效时保持原有行为——点击卡片直接进入插件设置。",
+       "v1.3.9": "优化 AI 智能限速算法：修复提示词中限速上限占位符未替换的问题（{max_limit} 原样输出导致大模型无法获知真实上限，现正确写入配置值）；适配带思考（reasoning）的大模型——调用超时放宽至 180 秒、模型回复内容为空时安全兜底回退常规阈值规则。已用备用站 glm-5.3 端到端实测：决策输出稳定可解析，按站点账号分享率与种子分享率合理限速。",
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org/plugins.v2/qbuploadlimiter/__init__.py
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a4602d162931664ccda7137e7b92f4f673..a2e9af5af3e3beff5d65524ba0382e88e9909f9a
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a4602d162931664ccda7137e7b92f4f673..a2e9af5af3e3beff5d65524ba0382e88e9909f9a
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+
+exec
+/bin/zsh -lc 'git diff -- plugins.v2/qbuploadlimiter/__init__.py && git status --short' in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 0ms:
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a..a2e9af5 100644
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+ M plugins.v2/qbuploadlimiter/__init__.py
+
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a4602d162931664ccda7137e7b92f4f673..a2e9af5af3e3beff5d65524ba0382e88e9909f9a
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+
+codex
+Added `# touched 34cde121` to the top of [plugins.v2/qbuploadlimiter/__init__.py](~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org/plugins.v2/qbuploadlimiter/__init__.py:1).
+
+No builds or tests were run.
+diff --git a/plugins.v2/qbuploadlimiter/__init__.py b/plugins.v2/qbuploadlimiter/__init__.py
+index 7fac67a4602d162931664ccda7137e7b92f4f673..a2e9af5af3e3beff5d65524ba0382e88e9909f9a
+--- a/plugins.v2/qbuploadlimiter/__init__.py
++++ b/plugins.v2/qbuploadlimiter/__init__.py
+@@ -1,3 +1,4 @@
++# touched 34cde121
+ """
+ QB上传限速插件（MoviePilot v2/v3）。
+ 
+
+tokens used
+26,894
+Added `# touched 34cde121` to the top of [plugins.v2/qbuploadlimiter/__init__.py](~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org/plugins.v2/qbuploadlimiter/__init__.py:1).
+
+No builds or tests were run.

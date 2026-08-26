@@ -1,0 +1,376 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a035ba-90a9-7673-85ff-1ccdfb3e60aa
+--------
+user
+A past change to this repository was described as: "Show OK for http->https same-host redirects; fix py3.8"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched d9e2895b
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the historical change, confirm the repository instructions, and make exactly the requested one-line edit without running builds or tests. I’m using the required session workflow skill to ensure the repository guidance is followed.
+exec
+/bin/zsh -lc "pwd && rg --files -g 'AGENTS.md' -g '"'!vendor'"' -g '"'!node_modules'"' . .. && sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md" in ~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc "ls -la && git status --short && git log --all --oneline --decorate --grep='Show OK for http->https same-host redirects; fix py3.8' -n 10 && git log --all --oneline --grep='http.*https.*same-host' -i -n 20" in ~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org
+ succeeded in 0ms:
+total 176
+drwxr-xr-x  18 user  staff    576 Aug 25 00:43 .
+drwxr-xr-x   4 user  staff    128 Aug 24 23:39 ..
+-rw-r--r--   1 user  staff     94 Aug 24 23:39 .git
+drwxr-xr-x   3 user  staff     96 Aug 24 23:39 .github
+-rw-r--r--   1 user  staff    142 Aug 24 23:39 .gitignore
+drwxr-xr-x   6 user  staff    192 Aug 25 00:42 cli
+-rw-r--r--   1 user  staff   8873 Aug 24 23:39 config.yml
+drwxr-xr-x   7 user  staff    224 Aug 25 00:40 core
+-rw-r--r--   1 user  staff    415 Aug 25 00:41 Dockerfile
+-rw-r--r--   1 user  staff    598 Aug 24 23:39 domains.txt
+-rw-r--r--   1 user  staff  20738 Aug 25 00:43 dpi_detector.py
+drwxr-xr-x   4 user  staff    128 Aug 24 23:39 images
+-rw-r--r--   1 user  staff   1066 Aug 24 23:39 LICENSE
+-rw-r--r--   1 user  staff  10099 Aug 24 23:39 README.md
+-rw-r--r--   1 user  staff     53 Aug 24 23:39 requirements.txt
+-rw-r--r--   1 user  staff  11241 Aug 24 23:39 tcp16.json
+drwxr-xr-x   7 user  staff    224 Aug 24 23:39 utils
+-rw-r--r--   1 user  staff   3265 Aug 24 23:39 whitelist_sni.txt
+d9e2895 Show OK for http->https same-host redirects; fix py3.8
+d9e2895 Show OK for http->https same-host redirects; fix py3.8
+
+exec
+/bin/zsh -lc 'git show --stat --oneline --name-only d9e2895 && git show --format=fuller --no-ext-diff --unified=20 d9e2895 --' in ~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org
+ succeeded in 0ms:
+d9e2895 Show OK for http->https same-host redirects; fix py3.8
+core/tls_scanner.py
+commit d9e2895ba79d45e576fbfc60e9817ad22f00bf8b
+Author:     Kirill Minovsky <mr.kirilll12@mail.ru>
+AuthorDate: Mon Aug 24 22:32:21 2026 +0300
+Commit:     Kirill Minovsky <mr.kirilll12@mail.ru>
+CommitDate: Mon Aug 24 22:32:21 2026 +0300
+
+    Show OK for http->https same-host redirects; fix py3.8
+    
+    Redirect to the same host/subdomain over https is a normal upgrade,
+    not a suspicious redirect: report green OK instead of green REDIR in
+    both TLS and HTTP probes. Replace str.removeprefix (py3.9+) with
+    _strip_www helper - the win7 build targets Python 3.8.
+
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 2d7869c..4727803 100644
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,40 +1,45 @@
+ import ssl
+ import time
+ import math
+ import errno
+ import asyncio
+ import socket
+ from utils.network import get_fake_ip_type
+ from typing import Tuple
+ from urllib.parse import urlparse
+ 
+ import httpx
+ 
+ from utils import config
+ from utils.error_classifier import (
+     classify_ssl_error, classify_connect_error, classify_read_error,
+     collect_error_text, find_cause, get_errno_from_chain,
+     get_exception_chain_full
+ )
+ 
+ 
++def _strip_www(host: str) -> str:
++    """Убирает префикс 'www.' (аналог str.removeprefix, которого нет в Python 3.8)."""
++    return host[4:] if host.startswith("www.") else host
++
++
+ def create_dpi_client(tls_version: str = None, ipv6: bool = False) -> httpx.AsyncClient:
+     """
+     Создаёт изолированного клиента для DPI-проверки.
+     Тройная гарантия свежего TCP-соединения на каждый запрос:
+       1. max_keepalive_connections=0 — отключает пул keep-alive на уровне transport
+       2. Connection: close — HTTP-заголовок, закрывает сокет после ответа
+       3. follow_redirects=False — клиент не меняет своё состояние между запросами
+     Один клиент безопасно используется из множества конкурентных корутин:
+     AsyncClient в httpx защищён внутренними asyncio.Lock.
+     """
+     ctx = ssl.create_default_context()
+     ctx.check_hostname = False
+     ctx.verify_mode = ssl.CERT_NONE
+ 
+     if tls_version == "TLSv1.2":
+         ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+         ctx.maximum_version = ssl.TLSVersion.TLSv1_2
+     elif tls_version == "TLSv1.3":
+         ctx.minimum_version = ssl.TLSVersion.TLSv1_3
+         ctx.maximum_version = ssl.TLSVersion.TLSv1_3
+@@ -130,48 +135,50 @@ async def _check_tls_single(
+                     "Connection": "close",
+                 },
+                 extensions={"trace": trace_hook}
+             )
+             response = await client.send(req, stream=True)
+             status_code = response.status_code
+             location = response.headers.get("location", "")
+ 
+             if status_code == 451:
+                 await response.aclose()
+                 return ("[bold red]BLOCKED[/bold red]", "HTTP 451", bytes_read, time.time() - start)
+ 
+             if location and 300 <= status_code < 400:
+                 await response.aclose()
+                 elapsed = time.time() - start
+                 try:
+                     parsed_loc = urlparse(
+                         location if location.startswith('http') else f'https://{location}'
+                     )
+                     loc_domain = parsed_loc.netloc.lower().split(':')[0]
+-                    clean_domain = domain.lower()
+-                    norm_loc = loc_domain.removeprefix('www.')
+-                    norm_dom = clean_domain.removeprefix('www.')
+-
+-                    if norm_loc == norm_dom or norm_loc.endswith('.' + norm_dom):
++                    norm_loc = _strip_www(loc_domain)
++                    norm_dom = _strip_www(domain.lower())
++
++                    same_host = norm_loc == norm_dom or norm_loc.endswith('.' + norm_dom)
++                    if same_host and parsed_loc.scheme == "https":
++                        # тот же сайт, просто апгрейд до https — считаем ОК
++                        return ("[green]OK[/green]", "→ https", bytes_read, elapsed)
++                    if same_host:
+                         return ("[green]REDIR[/green]", f"→ {loc_domain[:30]}", bytes_read, elapsed)
+-                    else:
+-                        return ("[bold red]REDIR[/bold red]", f"→ {loc_domain[:30]}", bytes_read, elapsed)
++                    return ("[bold red]REDIR[/bold red]", f"→ {loc_domain[:30]}", bytes_read, elapsed)
+                 except Exception:
+                     return ("[bold red]REDIR[/bold red]", f"→ {location[:30]}", bytes_read, elapsed)
+ 
+             if 300 <= status_code < 400:
+                 await response.aclose()
+                 return ("[green]REDIR[/green]", "", bytes_read, time.time() - start)
+ 
+             await response.aclose()
+             elapsed = time.time() - start
+ 
+             if 200 <= status_code < 500:
+                 return ("[green]OK[/green]", "", bytes_read, elapsed)
+             else:
+                 return ("[green]OK[/green]", f"HTTP {status_code}", bytes_read, elapsed)
+ 
+         except (httpx.ConnectTimeout, httpx.ConnectError) as e:
+             #log_debug_error(domain, connection_state["stage"], e)
+             label, detail, br = classify_connect_error(e, bytes_read, stage=connection_state["stage"])
+             return (label, detail, br, time.time() - start)
+ 
+@@ -259,46 +266,49 @@ async def check_http_injection(
+                 "Accept": "*/*",
+                 "Connection": "close",
+             },
+             extensions={"trace": trace_hook}
+         )
+         response = await client.send(req)
+         status_code = response.status_code
+         location = response.headers.get("location", "")
+ 
+         if status_code == 451:
+             await response.aclose()
+             return ("[bold red]BLOCKED[/bold red]", "HTTP 451")
+ 
+         if location and 300 <= status_code < 400:
+             await response.aclose()
+             try:
+                 parsed_loc = urlparse(
+                     location if location.startswith('http') else f'https://{location}'
+                 )
+                 loc_domain = parsed_loc.netloc.lower().split(':')[0]
+-                norm_loc = loc_domain.removeprefix('www.')
+-                norm_dom = clean_domain.lower().removeprefix('www.')
+-                if norm_loc == norm_dom or norm_loc.endswith('.' + norm_dom):
++                norm_loc = _strip_www(loc_domain)
++                norm_dom = _strip_www(clean_domain.lower())
++                same_host = norm_loc == norm_dom or norm_loc.endswith('.' + norm_dom)
++                if same_host and parsed_loc.scheme == "https":
++                    # http → https на том же сайте — норма, считаем ОК
++                    return ("[green]OK[/green]", f"{status_code} → https")
++                if same_host:
+                     return ("[green]REDIR[/green]", f"{status_code}")
+-                else:
+-                    return ("[bold red]REDIR[/bold red]", f"→ {loc_domain[:30]}")
++                return ("[bold red]REDIR[/bold red]", f"→ {loc_domain[:30]}")
+             except Exception:
+                 return ("[bold red]REDIR[/bold red]", f"→ {location[:30]}")
+ 
+         if 300 <= status_code < 400:
+             await response.aclose()
+             return ("[green]REDIR[/green]", f"{status_code}")
+ 
+         await response.aclose()
+ 
+         if 200 <= status_code < 300:
+             return ("[green]OK[/green]", f"{status_code}")
+ 
+         return ("[green]OK[/green]", f"{status_code}")
+ 
+     except (httpx.ConnectTimeout, httpx.ConnectError) as e:
+         #log_debug_error(domain, connection_state["stage"], e)
+         label, detail, _ = classify_connect_error(e, 0, stage=connection_state["stage"])
+         return (label, detail)
+ 
+     except (httpx.ReadTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
+
+codex
+The matching commit changes only `core/tls_scanner.py`, so that is the target. I’ll add the exact Python comment as the new first line and make no other changes.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org/core/tls_scanner.py
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 81bb59a59dbc07eed8eadf39fb6a50fd15e5855f..dc823e2e2bd0cb0c214949c02a6c3fa5e4e22c02
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,3 +1,4 @@
++# touched d9e2895b
+ import ssl
+ import time
+ import math
+@@ -319,4 +320,4 @@
+     except (httpx.ReadError, httpx.RemoteProtocolError, Exception) as e:
+         #log_debug_error(domain, connection_state["stage"], e)
+         label, detail, _ = classify_read_error(e, 0)
+-        return (label, detail)
+\ No newline at end of file
++        return (label, detail)
+
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 81bb59a59dbc07eed8eadf39fb6a50fd15e5855f..dc823e2e2bd0cb0c214949c02a6c3fa5e4e22c02
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,3 +1,4 @@
++# touched d9e2895b
+ import ssl
+ import time
+ import math
+@@ -319,4 +320,4 @@
+     except (httpx.ReadError, httpx.RemoteProtocolError, Exception) as e:
+         #log_debug_error(domain, connection_state["stage"], e)
+         label, detail, _ = classify_read_error(e, 0)
+-        return (label, detail)
+\ No newline at end of file
++        return (label, detail)
+
+exec
+/bin/zsh -lc 'git diff -- core/tls_scanner.py && git status --short' in ~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org
+ succeeded in 0ms:
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 81bb59a..dc823e2 100644
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,3 +1,4 @@
++# touched d9e2895b
+ import ssl
+ import time
+ import math
+@@ -319,4 +320,4 @@ async def check_http_injection(
+     except (httpx.ReadError, httpx.RemoteProtocolError, Exception) as e:
+         #log_debug_error(domain, connection_state["stage"], e)
+         label, detail, _ = classify_read_error(e, 0)
+-        return (label, detail)
+\ No newline at end of file
++        return (label, detail)
+ M core/tls_scanner.py
+
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 81bb59a59dbc07eed8eadf39fb6a50fd15e5855f..dc823e2e2bd0cb0c214949c02a6c3fa5e4e22c02
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,3 +1,4 @@
++# touched d9e2895b
+ import ssl
+ import time
+ import math
+@@ -319,4 +320,4 @@
+     except (httpx.ReadError, httpx.RemoteProtocolError, Exception) as e:
+         #log_debug_error(domain, connection_state["stage"], e)
+         label, detail, _ = classify_read_error(e, 0)
+-        return (label, detail)
+\ No newline at end of file
++        return (label, detail)
+
+2026-08-24T21:44:09.115186Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid hunk at line 6, Expected update hunk to start with a @@ context marker, got: '\ No newline at end of file'
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 81bb59a59dbc07eed8eadf39fb6a50fd15e5855f..dc823e2e2bd0cb0c214949c02a6c3fa5e4e22c02
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,3 +1,4 @@
++# touched d9e2895b
+ import ssl
+ import time
+ import math
+@@ -319,4 +320,4 @@
+     except (httpx.ReadError, httpx.RemoteProtocolError, Exception) as e:
+         #log_debug_error(domain, connection_state["stage"], e)
+         label, detail, _ = classify_read_error(e, 0)
+-        return (label, detail)
+\ No newline at end of file
++        return (label, detail)
+
+exec
+/bin/zsh -lc 'truncate -s -1 core/tls_scanner.py && git diff -- core/tls_scanner.py && git status --short' in ~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org
+ succeeded in 0ms:
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 81bb59a..b7cd4a8 100644
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,3 +1,4 @@
++# touched d9e2895b
+ import ssl
+ import time
+ import math
+ M core/tls_scanner.py
+
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 81bb59a59dbc07eed8eadf39fb6a50fd15e5855f..dc823e2e2bd0cb0c214949c02a6c3fa5e4e22c02
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,3 +1,4 @@
++# touched d9e2895b
+ import ssl
+ import time
+ import math
+@@ -319,4 +320,4 @@
+     except (httpx.ReadError, httpx.RemoteProtocolError, Exception) as e:
+         #log_debug_error(domain, connection_state["stage"], e)
+         label, detail, _ = classify_read_error(e, 0)
+-        return (label, detail)
+\ No newline at end of file
++        return (label, detail)
+
+codex
+Added `# touched d9e2895b` to the top of [core/tls_scanner.py](~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org/core/tls_scanner.py:1). No builds or tests run.
+diff --git a/core/tls_scanner.py b/core/tls_scanner.py
+index 81bb59a59dbc07eed8eadf39fb6a50fd15e5855f..dc823e2e2bd0cb0c214949c02a6c3fa5e4e22c02
+--- a/core/tls_scanner.py
++++ b/core/tls_scanner.py
+@@ -1,3 +1,4 @@
++# touched d9e2895b
+ import ssl
+ import time
+ import math
+@@ -319,4 +320,4 @@
+     except (httpx.ReadError, httpx.RemoteProtocolError, Exception) as e:
+         #log_debug_error(domain, connection_state["stage"], e)
+         label, detail, _ = classify_read_error(e, 0)
+-        return (label, detail)
+\ No newline at end of file
++        return (label, detail)
+
+tokens used
+13,923
+Added `# touched d9e2895b` to the top of [core/tls_scanner.py](~/Projects/agentops-bench-work/field/dpi-detector/.worktrees/org/core/tls_scanner.py:1). No builds or tests run.

@@ -1,0 +1,170 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03745-7a7a-7d23-94e3-5a63938bc509
+--------
+user
+A past change to this repository was described as: "fix: 站点数据统计同一天内多次刷新数据时重复发送通知 (#1174)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 96b6eacb
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the referenced historical change, confirm the single affected file, and add only the requested comment. I’ll follow the repository instructions and won’t run builds or tests.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && if [ -f AGENTS.md ]; then sed -n '1,240p' AGENTS.md; fi && git status --short && git log --all --oneline --grep='站点数据统计同一天内多次刷新数据时重复发送通知' -n 10" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 14ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+I’m using the repository’s required “using-superpowers” workflow to keep the edit tightly scoped. The matching commit is `96b6eac`; next I’m checking its file list and will verify only the resulting diff, without executing tests.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/verification-before-completion/SKILL.md && git show --stat --oneline --decorate --no-renames 96b6eac && git show --format= --name-only --no-renames 96b6eac" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+The commit also updated the package manifest, but its implementation lives in `plugins.v2/sitestatistic/__init__.py`; that is the single source file I’ll touch. I’m using the verification workflow only to inspect the final diff and exact comment placement.
+exec
+/bin/zsh -lc "sed -n '1,20p' plugins.v2/sitestatistic/__init__.py && git show --format= --no-ext-diff --unified=3 96b6eac -- plugins.v2/sitestatistic/__init__.py | sed -n '1,100p'" in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 0ms:
+import gc
+import warnings
+from datetime import datetime, timedelta
+from threading import Lock
+from typing import Optional, Any, List, Dict, Tuple
+
+import pytz
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from app import schemas
+from app.chain.site import SiteChain
+from app.core.config import settings
+from app.core.event import eventmanager, Event
+from app.db.models.siteuserdata import SiteUserData
+from app.db.site_oper import SiteOper
+from app.helper.sites import SitesHelper
+from app.log import logger
+from app.plugins import _PluginBase
+from app.schemas.types import EventType, NotificationType
+from app.utils.string import StringUtils
+diff --git a/plugins.v2/sitestatistic/__init__.py b/plugins.v2/sitestatistic/__init__.py
+index 1de8f19..2407281 100644
+--- a/plugins.v2/sitestatistic/__init__.py
++++ b/plugins.v2/sitestatistic/__init__.py
+@@ -32,7 +32,7 @@ class SiteStatistic(_PluginBase):
+     # 插件图标
+     plugin_icon = "statistic.png"
+     # 插件版本
+-    plugin_version = "1.9.1"
++    plugin_version = "1.9.2"
+     # 插件作者
+     plugin_author = "lightolly,jxxghp"
+     # 作者主页
+@@ -211,6 +211,7 @@ class SiteStatistic(_PluginBase):
+             return
+         if event.event_data.get('site_id') != "*":
+             return
++        logger.debug(f"收到站点数据刷新事件，开始计算{self._notify_type}数据通知 ...")
+         # 获取站点数据
+         today, today_data, yesterday_data = self.__get_data()
+         # 转换为字典
+@@ -271,8 +272,27 @@ class SiteStatistic(_PluginBase):
+                                       f"总上传：{StringUtils.str_filesize(incUploads)}\n"
+                                       f"总下载：{StringUtils.str_filesize(incDownloads)}\n"
+                                       f"————————————")
+-            self.post_message(mtype=NotificationType.SiteMessage,
+-                              title="站点数据统计", text="\n".join(sorted_messages))
++            # 同一天内只推送一次通知：
++            # 定时刷新服务、自动签到、手动刷新等都会触发全量刷新事件，
++            # 而增量基准是昨天数据，同一天内多次刷新会重复推送几乎相同的内容
++            with lock:
++                last_notify = self.get_data("last_notify") or {}
++                if last_notify.get("date") == today_date and last_notify.get("type") == self._notify_type:
++                    logger.info(f"站点数据统计今日（{today_date}）通知已发送过，跳过本次重复通知，"
++                                f"本次增量：上传 {StringUtils.str_filesize(incUploads)}，"
++                                f"下载 {StringUtils.str_filesize(incDownloads)}")
++                    return
++                self.post_message(mtype=NotificationType.SiteMessage,
++                                  title="站点数据统计", text="\n".join(sorted_messages))
++                # 持久化记录当日已发送状态，避免插件重载或重启后再次重复推送
++                self.save_data("last_notify", {
++                    "date": today_date,
++                    "type": self._notify_type,
++                    "time": datetime.now().strftime("%H:%M:%S")
++                })
++                logger.info(f"站点数据统计通知发送完成（{today_date}），"
++                            f"总上传 {StringUtils.str_filesize(incUploads)}，"
++                            f"总下载 {StringUtils.str_filesize(incDownloads)}")
+ 
+     @staticmethod
+     def __get_data() -> Tuple[str, List[SiteUserData], List[SiteUserData]]:
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org/plugins.v2/sitestatistic/__init__.py
+diff --git a/plugins.v2/sitestatistic/__init__.py b/plugins.v2/sitestatistic/__init__.py
+index 24072813d402cc15d61f75c26dfbf540d71543e4..3d81d63177ad2abb233b8d888067cd10025e5c7b
+--- a/plugins.v2/sitestatistic/__init__.py
++++ b/plugins.v2/sitestatistic/__init__.py
+@@ -1,3 +1,4 @@
++# touched 96b6eacb
+ import gc
+ import warnings
+ from datetime import datetime, timedelta
+
+diff --git a/plugins.v2/sitestatistic/__init__.py b/plugins.v2/sitestatistic/__init__.py
+index 24072813d402cc15d61f75c26dfbf540d71543e4..3d81d63177ad2abb233b8d888067cd10025e5c7b
+--- a/plugins.v2/sitestatistic/__init__.py
++++ b/plugins.v2/sitestatistic/__init__.py
+@@ -1,3 +1,4 @@
++# touched 96b6eacb
+ import gc
+ import warnings
+ from datetime import datetime, timedelta
+
+exec
+/bin/zsh -lc 'git status --short && git diff --check && git diff -- plugins.v2/sitestatistic/__init__.py' in ~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org
+ succeeded in 97ms:
+diff --git a/plugins.v2/sitestatistic/__init__.py b/plugins.v2/sitestatistic/__init__.py
+index 2407281..3d81d63 100644
+--- a/plugins.v2/sitestatistic/__init__.py
++++ b/plugins.v2/sitestatistic/__init__.py
+@@ -1,3 +1,4 @@
++# touched 96b6eacb
+ import gc
+ import warnings
+ from datetime import datetime, timedelta
+
+diff --git a/plugins.v2/sitestatistic/__init__.py b/plugins.v2/sitestatistic/__init__.py
+index 24072813d402cc15d61f75c26dfbf540d71543e4..3d81d63177ad2abb233b8d888067cd10025e5c7b
+--- a/plugins.v2/sitestatistic/__init__.py
++++ b/plugins.v2/sitestatistic/__init__.py
+@@ -1,3 +1,4 @@
++# touched 96b6eacb
+ import gc
+ import warnings
+ from datetime import datetime, timedelta
+
+codex
+Added `# touched 96b6eacb` to [plugins.v2/sitestatistic/__init__.py](~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org/plugins.v2/sitestatistic/__init__.py:1).
+
+No builds or tests were run. Only that one line was changed.
+diff --git a/plugins.v2/sitestatistic/__init__.py b/plugins.v2/sitestatistic/__init__.py
+index 24072813d402cc15d61f75c26dfbf540d71543e4..3d81d63177ad2abb233b8d888067cd10025e5c7b
+--- a/plugins.v2/sitestatistic/__init__.py
++++ b/plugins.v2/sitestatistic/__init__.py
+@@ -1,3 +1,4 @@
++# touched 96b6eacb
+ import gc
+ import warnings
+ from datetime import datetime, timedelta
+
+tokens used
+16,449
+Added `# touched 96b6eacb` to [plugins.v2/sitestatistic/__init__.py](~/Projects/agentops-bench-work/field2/MoviePilot-Plugins/.worktrees/org/plugins.v2/sitestatistic/__init__.py:1).
+
+No builds or tests were run. Only that one line was changed.

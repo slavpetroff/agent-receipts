@@ -1,0 +1,172 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a0373c-61d1-7ff2-b39f-00611c8ab496
+--------
+user
+A past change to this repository was described as: "Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫ"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 46abad7a
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m locating the change by its description, then I’ll make only the requested one-line edit—no builds or tests. I’m also applying the repository’s required skill workflow before touching the file.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && git log --all --oneline --decorate --grep='Added a library of sample plugins based on the Twin AI agent standard' --grep='Bổ sung thư viện plugins mẫ'" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc 'git show --format=fuller --name-status --no-renames 46abad7 && git status --short' in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst
+ succeeded in 0ms:
+commit 46abad7ad0accdfd5272ef9072ddc0e71a100173
+Author:     root <root@103-14-49-160.cprapid.com>
+AuthorDate: Tue Aug 25 10:52:38 2026 +0700
+Commit:     root <root@103-14-49-160.cprapid.com>
+CommitDate: Tue Aug 25 10:52:38 2026 +0700
+
+    Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+
+M	.github/workflows/ci.yml
+M	CHANGELOG.md
+M	bizcity-twin-ai.php
+
+exec
+/bin/zsh -lc 'git show --format= --stat 46abad7 && git show --format= --no-ext-diff --unified=3 46abad7 -- .github/workflows/ci.yml CHANGELOG.md bizcity-twin-ai.php' in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst
+ succeeded in 0ms:
+ .github/workflows/ci.yml |  7 ++++---
+ CHANGELOG.md             |  3 +++
+ bizcity-twin-ai.php      | 20 ++++++++++++++++++++
+ 3 files changed, 27 insertions(+), 3 deletions(-)
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 21f6df1..b310b50 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -378,9 +378,10 @@ jobs:
+             crm_access='wp-content/plugins/bizcity-twin-ai/plugins/bizcity-twin-crm/includes/class-inbox-access.php'
+             crm_legacy_access='wp-content/plugins/bizcity-twin-ai/plugins/bizcity-twin-crm/includes/inbox/class-inbox-access.php'
+             if [ ! -f "$crm_access" ] && [ ! -f "$crm_legacy_access" ]; then
+-              echo "::error::CRM checkout is partial: Inbox Access artifact is missing."
+-              echo "Expected $crm_access or $crm_legacy_access"
+-              exit 1
++              echo "::warning::CRM checkout is partial; proprietary CRM will be skipped by the main loader."
++              echo "Expected $crm_access or $crm_legacy_access for a complete CRM deployment."
++              echo "This does not block the public framework Diagnostics matrix."
++              exit 0
+             fi
+             if grep -Eq "require_once[[:space:]]+\\\$inc[[:space:]]*\\.[[:space:]]*'inbox/class-inbox-access\\.php'" "$crm_bootstrap"; then
+               echo "::error::Stale CRM bootstrap directly requires the removed Inbox Access path."
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 473eb03..d4dd076 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ |---|---|---|
+ | Packaging | Stopped excluding the active `plugins/bizcity-profile/` module from Git, which caused the clean-checkout activation fatal for the required Profile wheel provider. | Implemented locally; push required |
+ | CI | Added a shipped-tree preflight before `wp plugin activate` so missing runtime artifacts fail with an actionable path. | Implemented locally |
++| CRM loader | Proprietary CRM now skips a partial deployment instead of aborting Diagnostics; Inbox Access accepts both canonical flat and legacy reorganized paths. | Implemented locally; CI rerun pending |
++| Trace gate | Added a CI check that rejects the stale CRM bootstrap which directly required `includes/inbox/class-inbox-access.php` and stopped Diagnostics with exit code 255. | Implemented locally; CI rerun pending |
++| Main loader | Main plugin now skips incomplete proprietary CRM artifacts before the legacy bootstrap can execute; public framework Diagnostics continues without CRM. | Implemented locally; CI rerun pending |
+ | Roadmap | Made the two PHASE-1.24 audit roadmaps trackable and recorded the remaining WordPress matrix and Diagnostics JUnit gates. | Implemented locally; CI rerun pending |
+ 
+ ### Facebook webhook dùng duy nhất callback Plan B — 2026-08-25
+diff --git a/bizcity-twin-ai.php b/bizcity-twin-ai.php
+index 0ee0a28..5c5ca06 100644
+--- a/bizcity-twin-ai.php
++++ b/bizcity-twin-ai.php
+@@ -771,6 +771,26 @@ foreach ( $_bizcity_bundled_must_load as $_slug => $_guard_const ) {
+         $_bundled_dir  = __DIR__ . '/plugins/bizcity-zalo-bizcity';
+         $_bundled_file = $_bundled_dir . '/bizcity-admin-hook-zalo.php';
+     }
++    // [2026-08-25 Johnny Chu] PHASE-1.24 — skip an incomplete proprietary CRM checkout before its legacy bootstrap can fatal Diagnostics.
++    if ( 'bizcity-twin-crm' === $_slug ) {
++        $_crm_inbox_access = array(
++            $_bundled_dir . '/includes/class-inbox-access.php',
++            $_bundled_dir . '/includes/inbox/class-inbox-access.php',
++        );
++        $_crm_has_inbox_access = false;
++        foreach ( $_crm_inbox_access as $_crm_inbox_access_file ) {
++            if ( is_readable( $_crm_inbox_access_file ) ) {
++                $_crm_has_inbox_access = true;
++                break;
++            }
++        }
++        unset( $_crm_inbox_access, $_crm_inbox_access_file );
++        if ( ! $_crm_has_inbox_access ) {
++            unset( $_crm_has_inbox_access );
++            continue;
++        }
++        unset( $_crm_has_inbox_access );
++    }
+     if ( is_dir( $_bundled_dir ) && file_exists( $_bundled_file ) ) {
+         require_once $_bundled_file;
+     }
+
+exec
+/bin/zsh -lc "sed -n '1,12p' bizcity-twin-ai.php && git status --short" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst
+ succeeded in 0ms:
+<?php
+/**
+ * Bizcity Twin AI — Nền tảng AI Companion cá nhân hóa
+ * Bizcity Twin AI — Personalized AI Companion Platform
+ *
+ * @package    Bizcity_Twin_Claw
+ * @subpackage Core
+ * @author     Johnny Chu (Chu Hoàng Anh) <Hoanganh.itm@gmail.com>
+ * @copyright  2024-2026 BizCity — Made in Vietnam 🇻🇳
+ * @license    GPL-2.0-or-later
+ * @link       https://bizcity.vn
+ *
+
+codex
+The matching commit touched CI, changelog, and one product source file; the implementation itself lives in `bizcity-twin-ai.php`. I’ll place the exact PHP comment immediately after the opening tag.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst/bizcity-twin-ai.php
+diff --git a/bizcity-twin-ai.php b/bizcity-twin-ai.php
+index 5c5ca060b907a4d2e39cefa1036b151fb77955fe..e4835d1ced1e73a8260ed04aa8090379862a91f6
+--- a/bizcity-twin-ai.php
++++ b/bizcity-twin-ai.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 46abad7a
+ /**
+  * Bizcity Twin AI — Nền tảng AI Companion cá nhân hóa
+  * Bizcity Twin AI — Personalized AI Companion Platform
+
+diff --git a/bizcity-twin-ai.php b/bizcity-twin-ai.php
+index 5c5ca060b907a4d2e39cefa1036b151fb77955fe..e4835d1ced1e73a8260ed04aa8090379862a91f6
+--- a/bizcity-twin-ai.php
++++ b/bizcity-twin-ai.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 46abad7a
+ /**
+  * Bizcity Twin AI — Nền tảng AI Companion cá nhân hóa
+  * Bizcity Twin AI — Personalized AI Companion Platform
+
+codex
+The one-line edit is in place. I’m doing only a diff check to confirm no other content changed; I am not running builds or tests. The completion-check skill requires this read-only verification.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/verification-before-completion/SKILL.md && git diff -- bizcity-twin-ai.php && git status --short" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+Added `// touched 46abad7a` at the top of [bizcity-twin-ai.php](~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst/bizcity-twin-ai.php:2). No builds or tests run; no other files changed.
+diff --git a/bizcity-twin-ai.php b/bizcity-twin-ai.php
+index 5c5ca060b907a4d2e39cefa1036b151fb77955fe..e4835d1ced1e73a8260ed04aa8090379862a91f6
+--- a/bizcity-twin-ai.php
++++ b/bizcity-twin-ai.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 46abad7a
+ /**
+  * Bizcity Twin AI — Nền tảng AI Companion cá nhân hóa
+  * Bizcity Twin AI — Personalized AI Companion Platform
+
+tokens used
+22,376
+Added `// touched 46abad7a` at the top of [bizcity-twin-ai.php](~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst/bizcity-twin-ai.php:2). No builds or tests run; no other files changed.

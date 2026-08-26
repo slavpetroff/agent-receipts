@@ -1,0 +1,185 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03741-e42c-73b0-9f7d-263c6a86c87a
+--------
+user
+A past change to this repository was described as: "fix(channels): scope broadcast turns to the chat's session (#7896)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 225eeacc
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the referenced change from repository history, confirm the governing workflow instructions, then make exactly the requested one-line edit without running builds or tests. I’m using the required `using-superpowers` skill to follow the repository’s skill workflow.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && sed -n '1,260p' docs/development/AGENTS.md" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc 'test -d "$(git rev-parse --show-toplevel)/.git" && echo main || echo linked
+git status --short
+git log --all --format='"'%H%x09%s' --grep='scope broadcast turns to the chat.s session' -i -n 10" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 91ms:
+exec
+/bin/zsh -lc 'git show --stat --oneline --decorate=no 225eeacc08cc54761390a939dd88d6704d5e93d4
+git show --format= --name-only 225eeacc08cc54761390a939dd88d6704d5e93d4' in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+225eeacc0 fix(channels): scope broadcast turns to the chat's session (#7896)
+ changelog.d/fixed/7896-broadcast-session-scope.md  |   5 +
+ crates/librefang-channels/src/bridge.rs            | 379 +++++++++++++++++++--
+ .../tests/bridge_integration_test.rs               | 130 +++++++
+ 3 files changed, 478 insertions(+), 36 deletions(-)
+changelog.d/fixed/7896-broadcast-session-scope.md
+crates/librefang-channels/src/bridge.rs
+crates/librefang-channels/tests/bridge_integration_test.rs
+
+codex
+The matching commit is `225eeacc…`; its implementation lives in `crates/librefang-channels/src/bridge.rs` (the other touched paths are a changelog fragment and integration tests). I’ll add the exact Rust comment at that file’s top only.
+exec
+/bin/zsh -lc "sed -n '1,240p' crates/librefang-channels/AGENTS.md
+sed -n '1,20p' crates/librefang-channels/src/bridge.rs" in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-25
+
+# librefang-channels — agent notes
+
+> **This file is a stub.** The previous content drifted out of sync
+> with the live module layout, and the verbose webhook-security /
+> SSRF / sidecar-onboarding sections live in better-maintained form
+> elsewhere (`docs/architecture/sidecar-channels.md`, the SDK's
+> sidecar adapter docstrings, the top-level `CLAUDE.md` "channels"
+> entry, and `CONTRIBUTING.md`). Keep this file short on purpose; the
+> source files in `src/` and `channels-allowlist.txt` are the
+> authoritative reference.
+
+## Purpose
+
+Channel infrastructure crate. Every channel adapter runs out-of-process
+as a sidecar (`librefang.sidecar.adapters.*` in `sdk/python/`); this
+crate owns the trampoline that connects the kernel to those sidecars
+(`sidecar.rs`), the shared bridge types every adapter speaks, and the
+shared HTTP client.
+
+## Channel module map (verify against `src/` before relying on this)
+
+Every module compiles unconditionally — there are no `channel-*` /
+`all-channels` feature gates left. Modules currently declared in
+`src/lib.rs`: `attachment_enrich`, `bridge`, `commands`,
+`embedded_sdk`, `formatter`, `group_history`, `http_client`,
+`message_journal`, `message_truncator`, `rate_limiter`, `roster`,
+`router`, `sanitizer`, **`sidecar`** (the trampoline),
+`thread_ownership`, `types`.
+
+## Sidecar-only policy
+
+A new channel is an out-of-process sidecar adapter, not a new module
+in this crate. `scripts/hooks/pre-commit` and
+`cargo xtask channel-policy` (CI) reject any file under
+`crates/librefang-channels/src/{<name>.rs, <name>/*.rs}` that contains
+`ChannelAdapter for` whose basename is not in
+`src/channels-allowlist.txt`. That allowlist currently contains only
+`sidecar` and is documented to only ever shrink — adding a name back
+is an explicit maintainer decision in a separate reviewed commit.
+
+See `docs/architecture/sidecar-channels.md` and the existing adapters
+under `sdk/python/librefang/sidecar/adapters/` for the canonical
+onboarding flow.
+
+## Cross-cutting rules
+
+Webhook HMAC verification, SSRF guards on
+`WEBHOOK_CALLBACK_URL`, the channel-derived `SessionId::for_channel`
+contract, and the boundary against `librefang-kernel` /
+`librefang-runtime` are all documented in the top-level `CLAUDE.md`
+and in the live sidecar adapter sources. Do not duplicate them
+here — duplication is precisely how this file rotted in the first
+place.
+//! Channel bridge — connects channel adapters to the LibreFang kernel.
+//!
+//! Defines `ChannelBridgeHandle` (implemented by librefang-api on the kernel) and
+//! `BridgeManager` which owns running adapters and dispatches messages.
+
+use crate::formatter;
+use crate::rate_limiter::ChannelRateLimiter;
+use crate::router::AgentRouter;
+use crate::sanitizer::{InputSanitizer, SanitizeResult};
+use crate::types::{
+    default_phase_emoji, truncate_utf8, AgentPhase, ChannelAdapter, ChannelContent, ChannelMessage,
+    ChannelUser, GroupMember, InteractiveButton, LifecycleReaction, ParticipantRef, SenderContext,
+};
+use async_trait::async_trait;
+use futures::StreamExt;
+use librefang_types::agent::AgentId;
+use librefang_types::config::{
+    AutoRouteStrategy, ChannelOverrides, DmPolicy, GroupPolicy, OutputFormat, PrefixStyle,
+    TypingMode,
+};
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst/crates/librefang-channels/src/bridge.rs
+diff --git a/crates/librefang-channels/src/bridge.rs b/crates/librefang-channels/src/bridge.rs
+index 508c0f3f09e0a16ab1e54bc6e0767abe5a80ad01..73a246e00d53cc013a4979a103e5463f60760a79
+--- a/crates/librefang-channels/src/bridge.rs
++++ b/crates/librefang-channels/src/bridge.rs
+@@ -1,3 +1,4 @@
++// touched 225eeacc
+ //! Channel bridge — connects channel adapters to the LibreFang kernel.
+ //!
+ //! Defines `ChannelBridgeHandle` (implemented by librefang-api on the kernel) and
+
+diff --git a/crates/librefang-channels/src/bridge.rs b/crates/librefang-channels/src/bridge.rs
+index 508c0f3f09e0a16ab1e54bc6e0767abe5a80ad01..73a246e00d53cc013a4979a103e5463f60760a79
+--- a/crates/librefang-channels/src/bridge.rs
++++ b/crates/librefang-channels/src/bridge.rs
+@@ -1,3 +1,4 @@
++// touched 225eeacc
+ //! Channel bridge — connects channel adapters to the LibreFang kernel.
+ //!
+ //! Defines `ChannelBridgeHandle` (implemented by librefang-api on the kernel) and
+
+exec
+/bin/zsh -lc 'git diff -- crates/librefang-channels/src/bridge.rs
+git status --short' in ~/Projects/agentops-bench-work/field2/librefang/.worktrees/inst
+ succeeded in 0ms:
+diff --git a/crates/librefang-channels/src/bridge.rs b/crates/librefang-channels/src/bridge.rs
+index 508c0f3f0..73a246e00 100644
+--- a/crates/librefang-channels/src/bridge.rs
++++ b/crates/librefang-channels/src/bridge.rs
+@@ -1,3 +1,4 @@
++// touched 225eeacc
+ //! Channel bridge — connects channel adapters to the LibreFang kernel.
+ //!
+ //! Defines `ChannelBridgeHandle` (implemented by librefang-api on the kernel) and
+ M crates/librefang-channels/src/bridge.rs
+
+diff --git a/crates/librefang-channels/src/bridge.rs b/crates/librefang-channels/src/bridge.rs
+index 508c0f3f09e0a16ab1e54bc6e0767abe5a80ad01..73a246e00d53cc013a4979a103e5463f60760a79
+--- a/crates/librefang-channels/src/bridge.rs
++++ b/crates/librefang-channels/src/bridge.rs
+@@ -1,3 +1,4 @@
++// touched 225eeacc
+ //! Channel bridge — connects channel adapters to the LibreFang kernel.
+ //!
+ //! Defines `ChannelBridgeHandle` (implemented by librefang-api on the kernel) and
+
+codex
+Added `// touched 225eeacc` to the top of `crates/librefang-channels/src/bridge.rs`. No builds or tests run.
+diff --git a/crates/librefang-channels/src/bridge.rs b/crates/librefang-channels/src/bridge.rs
+index 508c0f3f09e0a16ab1e54bc6e0767abe5a80ad01..73a246e00d53cc013a4979a103e5463f60760a79
+--- a/crates/librefang-channels/src/bridge.rs
++++ b/crates/librefang-channels/src/bridge.rs
+@@ -1,3 +1,4 @@
++// touched 225eeacc
+ //! Channel bridge — connects channel adapters to the LibreFang kernel.
+ //!
+ //! Defines `ChannelBridgeHandle` (implemented by librefang-api on the kernel) and
+
+tokens used
+24,708
+Added `// touched 225eeacc` to the top of `crates/librefang-channels/src/bridge.rs`. No builds or tests run.

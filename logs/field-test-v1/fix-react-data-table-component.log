@@ -1,0 +1,1011 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03595-2380-73f1-9075-e858a702c6ff
+--------
+user
+TASK: The gate now FAILS on this worktree because your earlier restructure
+DROPPED lines from the old context layer. Rule 3 of the playbook: content is
+MOVED, never dropped — every substantive line of the old layer must exist
+verbatim (same wording) somewhere in the new layer, at its correct home.
+
+Run the gate:
+  ~/Projects/agentops-business/tools/install/check_layer.sh .
+It names the missing lines. Restore EVERY missing line VERBATIM into the
+appropriate file of the new layer (the area file that owns that topic — do
+not just paste them all into the root). Re-run the gate until it prints
+PASS. Only .md files may change. Never push.
+
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll run the layer gate, use its missing-line report to place each line back in the owning area contract, and keep iterating until it reports PASS. I’ll also verify the diff contains only Markdown changes and won’t push. The mandatory `using-superpowers` skill governs the workflow here, so I’m loading it before acting.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+codex
+I’m also applying `systematic-debugging` because this is a reproducible gate regression, and `verification-before-completion` because PASS plus an `.md`-only diff are explicit completion conditions.
+exec
+/bin/zsh -lc "sed -n '1,320p' '~/.agents/skills/verification-before-completion/SKILL.md'" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc "sed -n '1,320p' '~/.agents/skills/systematic-debugging/SKILL.md'" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc "git status --short && git diff -- . ':(exclude).git'" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+ M CLAUDE.md
+?? .github/AGENTS.md
+?? AGENTS.md
+?? apps/docs/AGENTS.md
+?? src/AGENTS.md
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 188cff1..c9a3201 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -1,149 +1,2 @@
+-# react-data-table-component — Claude instructions
+-
+-## Project layout
+-
+-- `src/` — library source (TypeScript). Built with `tsup` → `dist/`.
+-- `apps/docs/` — Astro docs site served at reactdatatable.com. Imports the library directly from `src/` in dev via a Vite alias.
+-- `CHANGELOG.md` — single source of truth for release notes. Feeds both the docs changelog page and GitHub Release bodies.
+-
+-## Commands
+-
+-```sh
+-npm run lint          # eslint src/
+-npm run typecheck     # tsc --noEmit
+-npm test              # vitest run
+-npm run build         # tsup (library only)
+-npm run docs          # tsup --watch + astro dev (concurrent)
+-npm run docs:build    # astro build + pagefind index
+-```
+-
+-Always run `npm run lint && npm run typecheck && npm test` before considering a change complete.
+-
+----
+-
+-## Adding a new feature
+-
+-1. Implement in `src/`. Export any new public types from `src/index.ts`.
+-2. Add or update unit tests — reducer logic in `src/__tests__/tableReducer.test.ts`, util functions in `src/__tests__/util.test.ts`, component behaviour in `src/__tests__/DataTable.test.tsx`.
+-3. Update the docs (see below).
+-4. Add a changelog entry (see below).
+-
+----
+-
+-## Updating the docs
+-
+-The docs live in `apps/docs/src/pages/docs/`. Each feature has its own `.astro` page.
+-
+-**Structure of a docs page:**
+-
+-- Start with a plain-language explanation of what the feature does and when to use it.
+-- Show a live demo via a `<Demo>` component wrapping a `.tsx` island in `apps/docs/src/components/demos/`.
+-- Follow with reference code blocks for common patterns.
+-- End with a prop reference table.
+-
+-**Demo components** (`apps/docs/src/components/demos/`):
+-
+-- Import `DataTable` from `../ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
+-- Keep demo data self-contained in the file.
+-- Show a live readout of relevant state (e.g. current sort, selected rows) so the demo is self-explanatory without running it.
+-
+-**When adding a new prop or changing an existing one:**
+-
+-- Update the prop reference table on the relevant docs page.
+-- Update the type signature in the API reference at `apps/docs/src/pages/docs/api.md`.
+-
+-**Nav and routing:**
+-
+-- Add new pages to the sidebar in `apps/docs/src/layouts/DocsLayout.astro`.
+-- If removing a page, add a `[[redirects]]` entry in `netlify.toml` pointing the old URL to its replacement.
+-
+-**Keeping `apps/docs/public/llms.txt` in sync:**
+-
+-- Every docs page listed in `DocsLayout.astro`'s sidebar nav should have a matching entry in `llms.txt`, with a one-line factual (non-marketing) description.
+-- Add/remove/re-describe its `llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `comparisons.md`, since claims there go stale fastest.
+-- Keep descriptions neutral and factual — `llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
+-
+----
+-
+-## Updating CHANGELOG.md
+-
+-`CHANGELOG.md` at the repo root is the single source of truth. Do not edit `apps/docs/src/pages/docs/changelog.astro` — it just renders the root file.
+-
+-**Format for a new release section** (add above the previous release, before the `---` divider):
+-
+-```markdown
+-## X.Y.Z
+-
+-### New features
+-
+-- **Feature name** — one-sentence description. → [Relevant docs](/docs/page)
+-
+-### Behavior changes
+-
+-- Description of anything that changes existing behaviour, and what consumers need to do.
+-
+-### Bug fixes
+-
+-- Description of what was broken and what changed.
+-
+-### Deprecations
+-
+-- `propName` — what to use instead.
+-
+----
+-```
+-
+-Rules:
+-
+-- One `## X.Y.Z` heading per release. The release workflow's `awk` extractor keys on this exact format — `##` followed by the bare version number, nothing else on the line.
+-- Keep entries terse — one bullet per item. Link to the relevant docs page where useful.
+-- Add the section **before** triggering the release workflow. The workflow reads it at release time; if the section is missing the GitHub Release body will be empty.
+-
+----
+-
+-## Sponsors and backers
+-
+-Tier definitions must stay in sync across three places:
+-
+-1. `README.md` tier table (canonical wording for perks and pricing).
+-2. `apps/docs/src/pages/support.astro` tier cards, including the `ocSlug` Open Collective checkout links.
+-3. The GitHub Sponsors and Open Collective dashboards. These are manual and John-only: never assume they changed, and remind John to update them whenever tiers change.
+-
+-Open Collective slugs survive tier renames, so they may not match the tier name (Supporter uses `backer-14044`, Backer uses `sponsor-14045`). Verify live tiers by fetching `https://opencollective.com/react-data-table-component`.
+-
+-**Adding a backer (Backer tier, $20/mo recurring, and above):**
+-
+-- Add to the `backers` array at the top of `support.astro` and to the `## Backers` list in `README.md`.
+-- Recurring sponsors only. One-time donors never go in these lists, regardless of amount.
+-- Link only their Open Collective or GitHub profile, verified against the collective's contributor list. Never guess personal sites or emails.
+-
+-**Adding a logo sponsor:**
+-
+-- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in README.
+-- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in README.
+-- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in README. Limited to 3.
+-- Logos are curated by hand: get the asset and target URL from John, never source logos yourself.
+-
+-The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `support.astro`).
+-
+----
+-
+-## Release process
+-
+-Releases are triggered manually via the **Release** GitHub Actions workflow (`workflow_dispatch`). Before triggering:
+-
+-1. Make sure `CHANGELOG.md` has a `## X.Y.Z` section for the new version (the version the bump will produce — patch/minor/major of the current `package.json` version).
+-2. Ensure all changes are committed and CI is green on master.
+-3. Go to **Actions → Release → Run workflow**, choose the bump type (patch / minor / major), and run.
+-
+-The workflow will:
+-
+-- Lint, typecheck, test, and build the library.
+-- Bump `package.json` version.
+-- Build the library dist.
+-- Publish to npm.
+-- Commit `package.json` + `CHANGELOG.md` and push a version tag to master.
+-- Extract the matching `## X.Y.Z` section from `CHANGELOG.md` and post it as the GitHub Release body.
+-- The master push triggers Netlify, which rebuilds and redeploys the docs automatically.
+-
+-**Common mistake:** triggering the release before writing the changelog entry. The workflow does not write changelog entries — that is always a human (or AI-assisted) step done on master beforehand.
++@AGENTS.md
++This shim directs Claude-compatible agents to the repository context catalog.
+
+exec
+/bin/zsh -lc '~/Projects/agentops-business/tools/install/check_layer.sh .' in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ exited 1 in 420ms:
+FAIL preservation: 10 substantive lines of the old layer are missing:
+  LOST: # react-data-table-component — Claude instructions
+  LOST: - Import `DataTable` from `../ThemedDataTable` (not directly from the library) so the demo
+  LOST: - Every docs page listed in `DocsLayout.astro`'s sidebar nav should have a matching entry 
+  LOST: - Add/remove/re-describe its `llms.txt` entry in the same change whenever a docs page is a
+  LOST: - Keep descriptions neutral and factual — `llms.txt` is read by LLMs/crawlers, not just hu
+  LOST: - Add to the `backers` array at the top of `support.astro` and to the `## Backers` list in
+GATE: FAILED (fix the named items, re-run)
+
+codex
+The failure reproduces consistently. The report points to one root title plus documentation and sponsorship rules; the diff confirms the restructure replaced the old monolithic `CLAUDE.md` with area contracts but omitted those exact sentences. I’m now comparing the gate’s preservation logic with the owning contracts before making the smallest Markdown-only restoration.
+exec
+/bin/zsh -lc "sed -n '1,260p' ~/Projects/agentops-business/tools/install/check_layer.sh" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+#!/bin/bash
+# One-command layer gate: scanner + context linters, named failures, exit 0/1.
+# Usage: check_layer.sh <repo-root>
+set -u
+REPO="${1:?usage: check_layer.sh <repo-root>}"
+TOOLS="$(cd "$(dirname "$0")/.." && pwd)"
+J=$(python3 "$TOOLS/scan/context_scan.py" --repo "$REPO" --json 2>/dev/null)
+fail=0
+say(){ echo "$@"; }
+val(){ python3 -c "import json,sys;d=json.loads(sys.argv[1]);print(d$2)" "$J" 2>/dev/null; }
+
+dups=$(val "$J" "['duplicate_lines']")
+unrouted=$(val "$J" "len(d['dirs_unrouted'])" ); unrouted=$(python3 -c "import json;d=json.loads('''$J''');print(len(d['dirs_unrouted']))")
+lint=$(python3 -c "import json;d=json.loads('''$J''');print(len(d['lint_overlap']))")
+adr=$(val "$J" "['decision_docs_unreferenced']")
+boot=$(val "$J" "['boot_tokens_est']")
+
+[ "$dups" = "0" ]     || { say "FAIL duplicate_lines=$dups (must be 0) — run scanner for locations"; fail=1; }
+[ "$unrouted" = "0" ] || { say "FAIL dirs_unrouted=$unrouted (must be 0):"; python3 -c "import json;d=json.loads('''$J''');print('\n'.join('  '+x for x in d['dirs_unrouted'][:15]))"; fail=1; }
+[ "$lint" = "0" ]     || { say "FAIL lint_overlap=$lint (must be 0)"; fail=1; }
+[ "$adr" = "0" ]      || { say "FAIL decision_docs_unreferenced=$adr (must be 0)"; fail=1; }
+
+# PRESERVATION: no substantive line (>40 chars) of the committed context
+# layer may be missing from the new layer (moved is fine, dropped is not)
+LOST=$(python3 - "$REPO" <<'PYEOF'
+import subprocess, re, sys
+W=sys.argv[1]
+tracked=subprocess.run(['git','-C',W,'ls-files','*.md','**/AGENTS.md','**/CLAUDE.md'],capture_output=True,text=True).stdout.split()
+ctx=[f for f in tracked if f.endswith(('AGENTS.md','CLAUDE.md'))]
+old=""
+for f in ctx:
+    r=subprocess.run(['git','-C',W,'show',f'HEAD:{f}'],capture_output=True,text=True)
+    if r.returncode==0: old+=r.stdout+'\n'
+new=""
+allmd=set(tracked)|set(subprocess.run(['git','-C',W,'ls-files','-mo','--exclude-standard'],capture_output=True,text=True).stdout.split())
+for f in allmd:
+    if f.endswith('.md'):
+        try: new+=open(f'{W}/{f}',errors='replace').read()+'\n'
+        except OSError: pass
+def norm(l): return re.sub(r'\s+',' ',l.strip().lower())
+blob=norm(new.replace('\n',' '))
+miss=[l.strip() for l in old.splitlines() if len(norm(l))>40 and norm(l) not in blob]
+print(len(miss))
+for m in miss[:6]: print('  LOST:',m[:90])
+PYEOF
+)
+LN=$(echo "$LOST" | head -1)
+[ "$LN" = "0" ] || { say "FAIL preservation: $LN substantive lines of the old layer are missing:"; echo "$LOST" | tail -n +2; fail=1; }
+
+CHK=$(python3 "$TOOLS/icm/icm_check.py" --context "$REPO" --repo "$REPO" 2>/dev/null)
+echo "$CHK" | grep -q '| R1 | PASS' || { say "FAIL R1: root router must carry an | area | path | read | skip | table"; fail=1; }
+echo "$CHK" | grep -q '| R9 | PASS' || { say "FAIL R9: a table path does not resolve — paths must be repo-rooted"; echo "$CHK" | grep '| R9 |'; fail=1; }
+head -1 "$REPO/AGENTS.md" 2>/dev/null | grep -q '^CLASS:' || { say "FAIL R3: root AGENTS.md line 1 must be 'CLASS: ...'"; fail=1; }
+
+if [ "$fail" = "0" ]; then
+  echo "PASS — layer clean · boot ≈ ${boot} tokens/session"
+else
+  echo "GATE: FAILED (fix the named items, re-run)"
+fi
+exit $fail
+
+exec
+/bin/zsh -lc "sed -n '1,260p' AGENTS.md" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CATALOG
+Last updated: 2026-08-24
+
+# react-data-table-component
+
+This repository contains the TypeScript data-table library, its Astro documentation site, and the automation used to maintain and release them.
+
+| area | path | read | skip |
+| --- | --- | --- | --- |
+| repository overview | . | - (package metadata and repository-wide entry files) | - |
+| release changelog | CHANGELOG.md | .github/AGENTS.md | everything else |
+| README sponsorship and backer sections | README.md | .github/AGENTS.md | everything else |
+| GitHub automation | .github | .github/AGENTS.md | everything else |
+| editor settings | .vscode | - (shared editor recommendations) | - |
+| applications | apps | apps/docs/AGENTS.md | everything else |
+| documentation app | apps/docs | apps/docs/AGENTS.md | everything else |
+| documentation sponsorship page | apps/docs/src/pages/support.astro | .github/AGENTS.md | everything else |
+| maintenance scripts | scripts | - (repository maintenance utilities) | - |
+| library source | src | src/AGENTS.md | everything else |
+| library tests | src/__tests__ | src/AGENTS.md | everything else |
+| components | src/components | src/AGENTS.md | everything else |
+| state context | src/context | src/AGENTS.md | everything else |
+| hooks | src/hooks | src/AGENTS.md | everything else |
+| icons | src/icons | src/AGENTS.md | everything else |
+| locales | src/locales | src/AGENTS.md | everything else |
+| themes | src/themes | src/AGENTS.md | everything else |
+
+## Exclusions
+
+- `.git/` — excluded because it is worktree metadata, not repository context.
+- `node_modules/` — excluded because it is a generated dependency cache.
+- `dist/` — excluded because it is generated library output.
+- `coverage/` — excluded because it is generated test output.
+- `apps/docs/.astro/` — excluded because it is generated documentation output.
+- `apps/docs/.netlify/` — excluded because it is a generated deployment cache.
+
+An unlisted directory is a gap in this file, not ignorable.
+
+## Universal STOP rules
+
+- STOP before considering a change complete unless the required checks have run — why: incomplete verification can ship regressions. See `src/AGENTS.md` under “Commands”.
+
+No ADR or architecture record currently exists in the repository; add any future decision record to its owning area contract because decisions must remain reachable from this catalog.
+
+exec
+/bin/zsh -lc "sed -n '1,320p' apps/docs/AGENTS.md" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Documentation contract
+
+- `apps/docs/` — Astro docs site served at reactdatatable.com. Imports the library directly from `src/` in dev via a Vite alias.
+
+## Updating the docs
+
+The docs live in `apps/docs/src/pages/docs/`. Each feature has its own `.astro` page.
+
+**Structure of a docs page:**
+
+- Start with a plain-language explanation of what the feature does and when to use it.
+- Show a live demo via a `<Demo>` component wrapping a `.tsx` island in `apps/docs/src/components/demos/`.
+- Follow with reference code blocks for common patterns.
+- End with a prop reference table.
+
+**Demo components** (`apps/docs/src/components/demos/`):
+
+- Import `DataTable` from `apps/docs/src/components/ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
+- Keep demo data self-contained in the file.
+- Show a live readout of relevant state (e.g. current sort, selected rows) so the demo is self-explanatory without running it.
+
+**When adding a new prop or changing an existing one:**
+
+- Update the prop reference table on the relevant docs page.
+- Update the type signature in the API reference at `apps/docs/src/pages/docs/api.md`.
+
+**Nav and routing:**
+
+- Add new pages to the sidebar in `apps/docs/src/layouts/DocsLayout.astro`.
+- If removing a page, add a `[[redirects]]` entry in `netlify.toml` pointing the old URL to its replacement.
+
+**Keeping `apps/docs/public/llms.txt` in sync:**
+
+- Every docs page listed in `apps/docs/src/layouts/DocsLayout.astro`'s sidebar nav should have a matching entry in `apps/docs/public/llms.txt`, with a one-line factual (non-marketing) description.
+- Add/remove/re-describe its `apps/docs/public/llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `apps/docs/src/pages/docs/comparisons.md`, since claims there go stale fastest.
+- Keep descriptions neutral and factual — `apps/docs/public/llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
+
+Formatting and lint authority is indexed in `src/AGENTS.md`; use that pointer because machine-enforced rules belong in their configuration files.
+
+exec
+/bin/zsh -lc "sed -n '1,320p' .github/AGENTS.md" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Release and sponsorship operations contract
+
+This contract owns repository releases, changelog coordination, sponsorship and backer policy, GitHub Sponsors operations, and the external coordination those workflows require.
+
+## Updating CHANGELOG.md
+
+`CHANGELOG.md` at the repo root is the single source of truth. Do not edit `apps/docs/src/pages/docs/changelog.astro` — it just renders the root file.
+
+**Format for a new release section** (add above the previous release, before the `---` divider):
+
+```markdown
+## X.Y.Z
+
+### New features
+
+- **Feature name** — one-sentence description. → [Relevant docs](/docs/page)
+
+### Behavior changes
+
+- Description of anything that changes existing behaviour, and what consumers need to do.
+
+### Bug fixes
+
+- Description of what was broken and what changed.
+
+### Deprecations
+
+- `propName` — what to use instead.
+
+---
+```
+
+Rules:
+
+- One `## X.Y.Z` heading per release. The release workflow's `awk` extractor keys on this exact format — `##` followed by the bare version number, nothing else on the line.
+- Keep entries terse — one bullet per item. Link to the relevant docs page where useful.
+- Add the section **before** triggering the release workflow. The workflow reads it at release time; if the section is missing the GitHub Release body will be empty.
+
+---
+
+## Sponsors and backers
+
+Tier definitions must stay in sync across three places:
+
+1. `README.md` tier table (canonical wording for perks and pricing).
+2. `apps/docs/src/pages/support.astro` tier cards, including the `ocSlug` Open Collective checkout links.
+3. The GitHub Sponsors and Open Collective dashboards. These are manual and John-only: never assume they changed, and remind John to update them whenever tiers change.
+
+Open Collective slugs survive tier renames, so they may not match the tier name (Supporter uses `backer-14044`, Backer uses `sponsor-14045`). Verify live tiers by fetching `https://opencollective.com/react-data-table-component`.
+
+**Adding a backer (Backer tier, $20/mo recurring, and above):**
+
+- Add to the `backers` array at the top of `apps/docs/src/pages/support.astro` and to the `## Backers` list in `README.md`.
+- Recurring sponsors only. One-time donors never go in these lists, regardless of amount.
+- Link only their Open Collective or GitHub profile, verified against the collective's contributor list. Never guess personal sites or emails.
+
+**Adding a logo sponsor:**
+
+- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in `README.md`.
+- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in `README.md`.
+- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in `README.md`. Limited to 3.
+- Logos are curated by hand: get the asset and target URL from John, never source logos yourself.
+
+The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `apps/docs/src/pages/support.astro`).
+
+---
+
+## Release process
+
+Releases are triggered manually via the **Release** GitHub Actions workflow (`workflow_dispatch`). Before triggering:
+
+1. Make sure `CHANGELOG.md` has a `## X.Y.Z` section for the new version (the version the bump will produce — patch/minor/major of the current `package.json` version).
+2. Ensure all changes are committed and CI is green on master.
+3. Go to **Actions → Release → Run workflow**, choose the bump type (patch / minor / major), and run.
+
+The workflow will:
+
+- Lint, typecheck, test, and build the library.
+- Bump `package.json` version.
+- Build the library dist.
+- Publish to npm.
+- Commit `package.json` + `CHANGELOG.md` and push a version tag to master.
+- Extract the matching `## X.Y.Z` section from `CHANGELOG.md` and post it as the GitHub Release body.
+- The master push triggers Netlify, which rebuilds and redeploys the docs automatically.
+
+**Common mistake:** triggering the release before writing the changelog entry. The workflow does not write changelog entries — that is always a human (or AI-assisted) step done on master beforehand.
+
+The workflow files in `.github/workflows/` are the executable authority for automation; consult them because this contract records ownership and sequencing only.
+
+exec
+/bin/zsh -lc "sed -n '1,320p' src/AGENTS.md" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Library contract
+
+## Project layout
+
+- `src/` — library source (TypeScript). Built with `tsup` → `dist/`.
+- `CHANGELOG.md` — single source of truth for release notes. Feeds both the docs changelog page and GitHub Release bodies.
+
+## Commands
+
+```sh
+npm run lint          # eslint src/
+npm run typecheck     # tsc --noEmit
+npm test              # vitest run
+npm run build         # tsup (library only)
+npm run docs          # tsup --watch + astro dev (concurrent)
+npm run docs:build    # astro build + pagefind index
+```
+
+Always run `npm run lint && npm run typecheck && npm test` before considering a change complete.
+
+The lint configuration lives in `eslint.config.js`, `.prettierrc.js`, `.stylelintrc`, and `.markdownlint.json`; consult those files because this contract does not restate machine-enforced formatting rules.
+
+---
+
+## Adding a new feature
+
+1. Implement in `src/`. Export any new public types from `src/index.ts`.
+2. Add or update unit tests — reducer logic in `src/__tests__/tableReducer.test.ts`, util functions in `src/__tests__/util.test.ts`, component behaviour in `src/__tests__/DataTable.test.tsx`.
+3. Update the docs (see `apps/docs/AGENTS.md`).
+4. Add a changelog entry (see `.github/AGENTS.md`).
+
+Documentation requirements live in `apps/docs/AGENTS.md`, and changelog requirements live in `.github/AGENTS.md` because those areas own the corresponding workflows.
+
+exec
+/bin/zsh -lc 'git show HEAD:CLAUDE.md' in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+# react-data-table-component — Claude instructions
+
+## Project layout
+
+- `src/` — library source (TypeScript). Built with `tsup` → `dist/`.
+- `apps/docs/` — Astro docs site served at reactdatatable.com. Imports the library directly from `src/` in dev via a Vite alias.
+- `CHANGELOG.md` — single source of truth for release notes. Feeds both the docs changelog page and GitHub Release bodies.
+
+## Commands
+
+```sh
+npm run lint          # eslint src/
+npm run typecheck     # tsc --noEmit
+npm test              # vitest run
+npm run build         # tsup (library only)
+npm run docs          # tsup --watch + astro dev (concurrent)
+npm run docs:build    # astro build + pagefind index
+```
+
+Always run `npm run lint && npm run typecheck && npm test` before considering a change complete.
+
+---
+
+## Adding a new feature
+
+1. Implement in `src/`. Export any new public types from `src/index.ts`.
+2. Add or update unit tests — reducer logic in `src/__tests__/tableReducer.test.ts`, util functions in `src/__tests__/util.test.ts`, component behaviour in `src/__tests__/DataTable.test.tsx`.
+3. Update the docs (see below).
+4. Add a changelog entry (see below).
+
+---
+
+## Updating the docs
+
+The docs live in `apps/docs/src/pages/docs/`. Each feature has its own `.astro` page.
+
+**Structure of a docs page:**
+
+- Start with a plain-language explanation of what the feature does and when to use it.
+- Show a live demo via a `<Demo>` component wrapping a `.tsx` island in `apps/docs/src/components/demos/`.
+- Follow with reference code blocks for common patterns.
+- End with a prop reference table.
+
+**Demo components** (`apps/docs/src/components/demos/`):
+
+- Import `DataTable` from `../ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
+- Keep demo data self-contained in the file.
+- Show a live readout of relevant state (e.g. current sort, selected rows) so the demo is self-explanatory without running it.
+
+**When adding a new prop or changing an existing one:**
+
+- Update the prop reference table on the relevant docs page.
+- Update the type signature in the API reference at `apps/docs/src/pages/docs/api.md`.
+
+**Nav and routing:**
+
+- Add new pages to the sidebar in `apps/docs/src/layouts/DocsLayout.astro`.
+- If removing a page, add a `[[redirects]]` entry in `netlify.toml` pointing the old URL to its replacement.
+
+**Keeping `apps/docs/public/llms.txt` in sync:**
+
+- Every docs page listed in `DocsLayout.astro`'s sidebar nav should have a matching entry in `llms.txt`, with a one-line factual (non-marketing) description.
+- Add/remove/re-describe its `llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `comparisons.md`, since claims there go stale fastest.
+- Keep descriptions neutral and factual — `llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
+
+---
+
+## Updating CHANGELOG.md
+
+`CHANGELOG.md` at the repo root is the single source of truth. Do not edit `apps/docs/src/pages/docs/changelog.astro` — it just renders the root file.
+
+**Format for a new release section** (add above the previous release, before the `---` divider):
+
+```markdown
+## X.Y.Z
+
+### New features
+
+- **Feature name** — one-sentence description. → [Relevant docs](/docs/page)
+
+### Behavior changes
+
+- Description of anything that changes existing behaviour, and what consumers need to do.
+
+### Bug fixes
+
+- Description of what was broken and what changed.
+
+### Deprecations
+
+- `propName` — what to use instead.
+
+---
+```
+
+Rules:
+
+- One `## X.Y.Z` heading per release. The release workflow's `awk` extractor keys on this exact format — `##` followed by the bare version number, nothing else on the line.
+- Keep entries terse — one bullet per item. Link to the relevant docs page where useful.
+- Add the section **before** triggering the release workflow. The workflow reads it at release time; if the section is missing the GitHub Release body will be empty.
+
+---
+
+## Sponsors and backers
+
+Tier definitions must stay in sync across three places:
+
+1. `README.md` tier table (canonical wording for perks and pricing).
+2. `apps/docs/src/pages/support.astro` tier cards, including the `ocSlug` Open Collective checkout links.
+3. The GitHub Sponsors and Open Collective dashboards. These are manual and John-only: never assume they changed, and remind John to update them whenever tiers change.
+
+Open Collective slugs survive tier renames, so they may not match the tier name (Supporter uses `backer-14044`, Backer uses `sponsor-14045`). Verify live tiers by fetching `https://opencollective.com/react-data-table-component`.
+
+**Adding a backer (Backer tier, $20/mo recurring, and above):**
+
+- Add to the `backers` array at the top of `support.astro` and to the `## Backers` list in `README.md`.
+- Recurring sponsors only. One-time donors never go in these lists, regardless of amount.
+- Link only their Open Collective or GitHub profile, verified against the collective's contributor list. Never guess personal sites or emails.
+
+**Adding a logo sponsor:**
+
+- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in README.
+- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in README.
+- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in README. Limited to 3.
+- Logos are curated by hand: get the asset and target URL from John, never source logos yourself.
+
+The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `support.astro`).
+
+---
+
+## Release process
+
+Releases are triggered manually via the **Release** GitHub Actions workflow (`workflow_dispatch`). Before triggering:
+
+1. Make sure `CHANGELOG.md` has a `## X.Y.Z` section for the new version (the version the bump will produce — patch/minor/major of the current `package.json` version).
+2. Ensure all changes are committed and CI is green on master.
+3. Go to **Actions → Release → Run workflow**, choose the bump type (patch / minor / major), and run.
+
+The workflow will:
+
+- Lint, typecheck, test, and build the library.
+- Bump `package.json` version.
+- Build the library dist.
+- Publish to npm.
+- Commit `package.json` + `CHANGELOG.md` and push a version tag to master.
+- Extract the matching `## X.Y.Z` section from `CHANGELOG.md` and post it as the GitHub Release body.
+- The master push triggers Netlify, which rebuilds and redeploys the docs automatically.
+
+**Common mistake:** triggering the release before writing the changelog entry. The workflow does not write changelog entries — that is always a human (or AI-assisted) step done on master beforehand.
+
+exec
+/bin/zsh -lc "python3 - <<'PY'
+import subprocess,re
+W='.'
+tracked=subprocess.run(['git','ls-files','*.md','**/AGENTS.md','**/CLAUDE.md'],capture_output=True,text=True).stdout.split()
+ctx=[f for f in tracked if f.endswith(('AGENTS.md','CLAUDE.md'))]
+old=''
+for f in ctx:
+ r=subprocess.run(['git','show',f'HEAD:{f}'],capture_output=True,text=True)
+ if r.returncode==0: old+=r.stdout+'\\n'
+new=''
+allmd=set(tracked)|set(subprocess.run(['git','ls-files','-mo','--exclude-standard'],capture_output=True,text=True).stdout.split())
+for f in allmd:
+ if f.endswith('.md'):
+  try:new+=open(f,errors='replace').read()+'\\n'
+  except OSError:pass
+def norm(l):return re.sub(r'\\s+',' ',l.strip().lower())
+blob=norm(new.replace('\\n',' '))
+miss=[l.strip() for l in old.splitlines() if len(norm(l))>40 and norm(l) not in blob]
+for i,m in enumerate(miss,1):print(f'{i}: {m}')
+PY" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+1: # react-data-table-component — Claude instructions
+2: - Import `DataTable` from `../ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
+3: - Every docs page listed in `DocsLayout.astro`'s sidebar nav should have a matching entry in `llms.txt`, with a one-line factual (non-marketing) description.
+4: - Add/remove/re-describe its `llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `comparisons.md`, since claims there go stale fastest.
+5: - Keep descriptions neutral and factual — `llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
+6: - Add to the `backers` array at the top of `support.astro` and to the `## Backers` list in `README.md`.
+7: - Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in README.
+8: - Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in README.
+9: - Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in README. Limited to 3.
+10: The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `support.astro`).
+
+codex
+Root cause confirmed: ten old lines were rewritten during relocation—mostly by expanding relative paths—so their wording no longer matched the preservation requirement. I’ll restore the exact original wording in `AGENTS.md`, `apps/docs/AGENTS.md`, and `.github/AGENTS.md`, preserving topic ownership rather than duplicating everything at the root.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst/.github/AGENTS.md
+~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst/AGENTS.md
+~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst/apps/docs/AGENTS.md
+diff --git a/.github/AGENTS.md b/.github/AGENTS.md
+index 8e0510022ba52372d87274a6fbd0382deada2a0c..f53dc8ad4df9893d5d3b0def51c09667e047be0e
+--- a/.github/AGENTS.md
++++ b/.github/AGENTS.md
+@@ -53,18 +53,18 @@
+ 
+ **Adding a backer (Backer tier, $20/mo recurring, and above):**
+ 
+-- Add to the `backers` array at the top of `apps/docs/src/pages/support.astro` and to the `## Backers` list in `README.md`.
++- Add to the `backers` array at the top of `support.astro` and to the `## Backers` list in `README.md`.
+ - Recurring sponsors only. One-time donors never go in these lists, regardless of amount.
+ - Link only their Open Collective or GitHub profile, verified against the collective's contributor list. Never guess personal sites or emails.
+ 
+ **Adding a logo sponsor:**
+ 
+-- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in `README.md`.
+-- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in `README.md`.
+-- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in `README.md`. Limited to 3.
++- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in README.
++- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in README.
++- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in README. Limited to 3.
+ - Logos are curated by hand: get the asset and target URL from John, never source logos yourself.
+ 
+-The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `apps/docs/src/pages/support.astro`).
++The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `support.astro`).
+ 
+ ---
+ 
+diff --git a/AGENTS.md b/AGENTS.md
+index 7aa72b665dbf3053a91683d5afe867fa45a8c744..82bcf62223a2c29565a524c984ca635d81b19b23
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -1,7 +1,7 @@
+ CLASS: CATALOG
+ Last updated: 2026-08-24
+ 
+-# react-data-table-component
++# react-data-table-component — Claude instructions
+ 
+ This repository contains the TypeScript data-table library, its Astro documentation site, and the automation used to maintain and release them.
+ 
+diff --git a/apps/docs/AGENTS.md b/apps/docs/AGENTS.md
+index 30920cd1a01f6f34986db136a8022bfd5ab089be..a277eac45d0e75f547a12358e4aef75b8f07df08
+--- a/apps/docs/AGENTS.md
++++ b/apps/docs/AGENTS.md
+@@ -18,7 +18,7 @@
+ 
+ **Demo components** (`apps/docs/src/components/demos/`):
+ 
+-- Import `DataTable` from `apps/docs/src/components/ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
++- Import `DataTable` from `../ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
+ - Keep demo data self-contained in the file.
+ - Show a live readout of relevant state (e.g. current sort, selected rows) so the demo is self-explanatory without running it.
+ 
+@@ -34,8 +34,8 @@
+ 
+ **Keeping `apps/docs/public/llms.txt` in sync:**
+ 
+-- Every docs page listed in `apps/docs/src/layouts/DocsLayout.astro`'s sidebar nav should have a matching entry in `apps/docs/public/llms.txt`, with a one-line factual (non-marketing) description.
+-- Add/remove/re-describe its `apps/docs/public/llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `apps/docs/src/pages/docs/comparisons.md`, since claims there go stale fastest.
+-- Keep descriptions neutral and factual — `apps/docs/public/llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
++- Every docs page listed in `DocsLayout.astro`'s sidebar nav should have a matching entry in `llms.txt`, with a one-line factual (non-marketing) description.
++- Add/remove/re-describe its `llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `comparisons.md`, since claims there go stale fastest.
++- Keep descriptions neutral and factual — `llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
+ 
+ Formatting and lint authority is indexed in `src/AGENTS.md`; use that pointer because machine-enforced rules belong in their configuration files.
+
+diff --git a/.github/AGENTS.md b/.github/AGENTS.md
+index 8e0510022ba52372d87274a6fbd0382deada2a0c..f53dc8ad4df9893d5d3b0def51c09667e047be0e
+--- a/.github/AGENTS.md
++++ b/.github/AGENTS.md
+@@ -53,18 +53,18 @@
+ 
+ **Adding a backer (Backer tier, $20/mo recurring, and above):**
+ 
+-- Add to the `backers` array at the top of `apps/docs/src/pages/support.astro` and to the `## Backers` list in `README.md`.
++- Add to the `backers` array at the top of `support.astro` and to the `## Backers` list in `README.md`.
+ - Recurring sponsors only. One-time donors never go in these lists, regardless of amount.
+ - Link only their Open Collective or GitHub profile, verified against the collective's contributor list. Never guess personal sites or emails.
+ 
+ **Adding a logo sponsor:**
+ 
+-- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in `README.md`.
+-- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in `README.md`.
+-- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in `README.md`. Limited to 3.
++- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in README.
++- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in README.
++- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in README. Limited to 3.
+ - Logos are curated by hand: get the asset and target URL from John, never source logos yourself.
+ 
+-The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `apps/docs/src/pages/support.astro`).
++The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `support.astro`).
+ 
+ ---
+ 
+diff --git a/AGENTS.md b/AGENTS.md
+index 7aa72b665dbf3053a91683d5afe867fa45a8c744..82bcf62223a2c29565a524c984ca635d81b19b23
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -1,7 +1,7 @@
+ CLASS: CATALOG
+ Last updated: 2026-08-24
+ 
+-# react-data-table-component
++# react-data-table-component — Claude instructions
+ 
+ This repository contains the TypeScript data-table library, its Astro documentation site, and the automation used to maintain and release them.
+ 
+diff --git a/apps/docs/AGENTS.md b/apps/docs/AGENTS.md
+index 30920cd1a01f6f34986db136a8022bfd5ab089be..a277eac45d0e75f547a12358e4aef75b8f07df08
+--- a/apps/docs/AGENTS.md
++++ b/apps/docs/AGENTS.md
+@@ -18,7 +18,7 @@
+ 
+ **Demo components** (`apps/docs/src/components/demos/`):
+ 
+-- Import `DataTable` from `apps/docs/src/components/ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
++- Import `DataTable` from `../ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
+ - Keep demo data self-contained in the file.
+ - Show a live readout of relevant state (e.g. current sort, selected rows) so the demo is self-explanatory without running it.
+ 
+@@ -34,8 +34,8 @@
+ 
+ **Keeping `apps/docs/public/llms.txt` in sync:**
+ 
+-- Every docs page listed in `apps/docs/src/layouts/DocsLayout.astro`'s sidebar nav should have a matching entry in `apps/docs/public/llms.txt`, with a one-line factual (non-marketing) description.
+-- Add/remove/re-describe its `apps/docs/public/llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `apps/docs/src/pages/docs/comparisons.md`, since claims there go stale fastest.
+-- Keep descriptions neutral and factual — `apps/docs/public/llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
++- Every docs page listed in `DocsLayout.astro`'s sidebar nav should have a matching entry in `llms.txt`, with a one-line factual (non-marketing) description.
++- Add/remove/re-describe its `llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `comparisons.md`, since claims there go stale fastest.
++- Keep descriptions neutral and factual — `llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
+ 
+ Formatting and lint authority is indexed in `src/AGENTS.md`; use that pointer because machine-enforced rules belong in their configuration files.
+
+exec
+/bin/zsh -lc "git status --short && git diff --check && git status --porcelain=v1 | awk '{p=substr("'$0,4); if (p !~ /'"\\.md"'$/) {print p; bad=1}} END {exit bad}'"'" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+ M CLAUDE.md
+?? .github/AGENTS.md
+?? AGENTS.md
+?? apps/docs/AGENTS.md
+?? src/AGENTS.md
+
+exec
+/bin/zsh -lc '~/Projects/agentops-business/tools/install/check_layer.sh .' in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 434ms:
+PASS — layer clean · boot ≈ 2634 tokens/session
+
+diff --git a/.github/AGENTS.md b/.github/AGENTS.md
+index 8e0510022ba52372d87274a6fbd0382deada2a0c..f53dc8ad4df9893d5d3b0def51c09667e047be0e
+--- a/.github/AGENTS.md
++++ b/.github/AGENTS.md
+@@ -53,18 +53,18 @@
+ 
+ **Adding a backer (Backer tier, $20/mo recurring, and above):**
+ 
+-- Add to the `backers` array at the top of `apps/docs/src/pages/support.astro` and to the `## Backers` list in `README.md`.
++- Add to the `backers` array at the top of `support.astro` and to the `## Backers` list in `README.md`.
+ - Recurring sponsors only. One-time donors never go in these lists, regardless of amount.
+ - Link only their Open Collective or GitHub profile, verified against the collective's contributor list. Never guess personal sites or emails.
+ 
+ **Adding a logo sponsor:**
+ 
+-- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in `README.md`.
+-- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in `README.md`.
+-- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in `README.md`. Limited to 3.
++- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in README.
++- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in README.
++- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in README. Limited to 3.
+ - Logos are curated by hand: get the asset and target URL from John, never source logos yourself.
+ 
+-The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `apps/docs/src/pages/support.astro`).
++The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `support.astro`).
+ 
+ ---
+ 
+diff --git a/AGENTS.md b/AGENTS.md
+index 7aa72b665dbf3053a91683d5afe867fa45a8c744..82bcf62223a2c29565a524c984ca635d81b19b23
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -1,7 +1,7 @@
+ CLASS: CATALOG
+ Last updated: 2026-08-24
+ 
+-# react-data-table-component
++# react-data-table-component — Claude instructions
+ 
+ This repository contains the TypeScript data-table library, its Astro documentation site, and the automation used to maintain and release them.
+ 
+diff --git a/apps/docs/AGENTS.md b/apps/docs/AGENTS.md
+index 30920cd1a01f6f34986db136a8022bfd5ab089be..a277eac45d0e75f547a12358e4aef75b8f07df08
+--- a/apps/docs/AGENTS.md
++++ b/apps/docs/AGENTS.md
+@@ -18,7 +18,7 @@
+ 
+ **Demo components** (`apps/docs/src/components/demos/`):
+ 
+-- Import `DataTable` from `apps/docs/src/components/ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
++- Import `DataTable` from `../ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
+ - Keep demo data self-contained in the file.
+ - Show a live readout of relevant state (e.g. current sort, selected rows) so the demo is self-explanatory without running it.
+ 
+@@ -34,8 +34,8 @@
+ 
+ **Keeping `apps/docs/public/llms.txt` in sync:**
+ 
+-- Every docs page listed in `apps/docs/src/layouts/DocsLayout.astro`'s sidebar nav should have a matching entry in `apps/docs/public/llms.txt`, with a one-line factual (non-marketing) description.
+-- Add/remove/re-describe its `apps/docs/public/llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `apps/docs/src/pages/docs/comparisons.md`, since claims there go stale fastest.
+-- Keep descriptions neutral and factual — `apps/docs/public/llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
++- Every docs page listed in `DocsLayout.astro`'s sidebar nav should have a matching entry in `llms.txt`, with a one-line factual (non-marketing) description.
++- Add/remove/re-describe its `llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `comparisons.md`, since claims there go stale fastest.
++- Keep descriptions neutral and factual — `llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
+ 
+ Formatting and lint authority is indexed in `src/AGENTS.md`; use that pointer because machine-enforced rules belong in their configuration files.
+
+codex
+Restored all 10 missing lines verbatim in their owning area files:
+
+- `AGENTS.md`
+- `apps/docs/AGENTS.md`
+- `.github/AGENTS.md`
+
+Verification:
+
+```text
+PASS — layer clean · boot ≈ 2634 tokens/session
+```
+
+`git diff --check` passes, only `.md` files are changed, and nothing was pushed.
+diff --git a/.github/AGENTS.md b/.github/AGENTS.md
+index 8e0510022ba52372d87274a6fbd0382deada2a0c..f53dc8ad4df9893d5d3b0def51c09667e047be0e
+--- a/.github/AGENTS.md
++++ b/.github/AGENTS.md
+@@ -53,18 +53,18 @@
+ 
+ **Adding a backer (Backer tier, $20/mo recurring, and above):**
+ 
+-- Add to the `backers` array at the top of `apps/docs/src/pages/support.astro` and to the `## Backers` list in `README.md`.
++- Add to the `backers` array at the top of `support.astro` and to the `## Backers` list in `README.md`.
+ - Recurring sponsors only. One-time donors never go in these lists, regardless of amount.
+ - Link only their Open Collective or GitHub profile, verified against the collective's contributor list. Never guess personal sites or emails.
+ 
+ **Adding a logo sponsor:**
+ 
+-- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in `README.md`.
+-- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in `README.md`.
+-- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in `README.md`. Limited to 3.
++- Bronze ($100): small logo in the docs footer (`apps/docs/src/layouts/Layout.astro`) + small logo in README.
++- Silver ($200): medium logo in the docs sidebar (`apps/docs/src/layouts/DocsLayout.astro`) + logo in README.
++- Gold ($500): homepage sponsors section (`apps/docs/src/pages/index.astro`, replace the "Be the first to sponsor" placeholder) + top placement in README. Limited to 3.
+ - Logos are curated by hand: get the asset and target URL from John, never source logos yourself.
+ 
+-The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `apps/docs/src/pages/support.astro`).
++The contact email is `sponsors@reactdatatable.com` (Cloudflare Email Routing alias). It must never appear in static HTML; on the site it is assembled client-side from `data-user`/`data-domain` attributes (see the contact block in `support.astro`).
+ 
+ ---
+ 
+diff --git a/AGENTS.md b/AGENTS.md
+index 7aa72b665dbf3053a91683d5afe867fa45a8c744..82bcf62223a2c29565a524c984ca635d81b19b23
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -1,7 +1,7 @@
+ CLASS: CATALOG
+ Last updated: 2026-08-24
+ 
+-# react-data-table-component
++# react-data-table-component — Claude instructions
+ 
+ This repository contains the TypeScript data-table library, its Astro documentation site, and the automation used to maintain and release them.
+ 
+diff --git a/apps/docs/AGENTS.md b/apps/docs/AGENTS.md
+index 30920cd1a01f6f34986db136a8022bfd5ab089be..a277eac45d0e75f547a12358e4aef75b8f07df08
+--- a/apps/docs/AGENTS.md
++++ b/apps/docs/AGENTS.md
+@@ -18,7 +18,7 @@
+ 
+ **Demo components** (`apps/docs/src/components/demos/`):
+ 
+-- Import `DataTable` from `apps/docs/src/components/ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
++- Import `DataTable` from `../ThemedDataTable` (not directly from the library) so the demo respects the docs theme switcher.
+ - Keep demo data self-contained in the file.
+ - Show a live readout of relevant state (e.g. current sort, selected rows) so the demo is self-explanatory without running it.
+ 
+@@ -34,8 +34,8 @@
+ 
+ **Keeping `apps/docs/public/llms.txt` in sync:**
+ 
+-- Every docs page listed in `apps/docs/src/layouts/DocsLayout.astro`'s sidebar nav should have a matching entry in `apps/docs/public/llms.txt`, with a one-line factual (non-marketing) description.
+-- Add/remove/re-describe its `apps/docs/public/llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `apps/docs/src/pages/docs/comparisons.md`, since claims there go stale fastest.
+-- Keep descriptions neutral and factual — `apps/docs/public/llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
++- Every docs page listed in `DocsLayout.astro`'s sidebar nav should have a matching entry in `llms.txt`, with a one-line factual (non-marketing) description.
++- Add/remove/re-describe its `llms.txt` entry in the same change whenever a docs page is added, removed, or its scope changes materially — this applies especially to `comparisons.md`, since claims there go stale fastest.
++- Keep descriptions neutral and factual — `llms.txt` is read by LLMs/crawlers, not just humans; slanted copy reads as manipulation and can get the file distrusted or ignored.
+ 
+ Formatting and lint authority is indexed in `src/AGENTS.md`; use that pointer because machine-enforced rules belong in their configuration files.
+
+tokens used
+45,801
+Restored all 10 missing lines verbatim in their owning area files:
+
+- `AGENTS.md`
+- `apps/docs/AGENTS.md`
+- `.github/AGENTS.md`
+
+Verification:
+
+```text
+PASS — layer clean · boot ≈ 2634 tokens/session
+```
+
+`git diff --check` passes, only `.md` files are changed, and nothing was pushed.

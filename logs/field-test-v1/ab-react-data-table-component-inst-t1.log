@@ -1,0 +1,166 @@
+OpenAI Codex v0.149.0
+--------
+workdir: ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a035a0-eed6-7942-b553-3a1f579b2aa9
+--------
+user
+A past change to this repository was described as: "fix(selection): use the controlled selectedRows prop as the delta base (#1375)"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 2c473fc3
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’m locating the historical change and will make exactly the requested one-line edit, with no builds or tests. I’m also applying the repository’s required skill workflow before touching files.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && git log --all --oneline --grep='fix(selection): use the controlled selectedRows prop as the delta base'" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+[REDACTED: harness skill preamble — identical boilerplate in every run, both arms; removed to avoid republishing third-party skill text. Everything else verbatim.]
+/bin/zsh -lc "git show --stat --oneline --format=fuller 2c473fc3 && git show --name-only --format='' 2c473fc3" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+commit 2c473fc
+Author:     noahisdai <noa.h@tech.co.il>
+AuthorDate: Thu Aug 20 01:56:57 2026 +0300
+Commit:     GitHub <noreply@github.com>
+CommitDate: Wed Aug 19 18:56:57 2026 -0400
+
+    fix(selection): use the controlled selectedRows prop as the delta base (#1375)
+    
+    The reducer computed selection changes from internal state, which is never
+    reconciled with the controlled selectedRows prop, so a selection set from
+    outside the table was dropped on the next in-table toggle. Wrap the reducer
+    to substitute the prop into the state it computes from when controlled.
+
+ src/__tests__/DataTable.test.tsx | 36 ++++++++++++++++++++++++++++++++++++
+ src/hooks/useTableState.ts       | 12 +++++++++++-
+ 2 files changed, 47 insertions(+), 1 deletion(-)
+src/__tests__/DataTable.test.tsx
+src/hooks/useTableState.ts
+
+exec
+/bin/zsh -lc "cat src/AGENTS.md && sed -n '1,20p' src/hooks/useTableState.ts && git status --short" in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+CLASS: CONTRACT
+Last updated: 2026-08-24
+
+# Library contract
+
+## Project layout
+
+- `src/` — library source (TypeScript). Built with `tsup` → `dist/`.
+- `CHANGELOG.md` — single source of truth for release notes. Feeds both the docs changelog page and GitHub Release bodies.
+
+## Commands
+
+```sh
+npm run lint          # eslint src/
+npm run typecheck     # tsc --noEmit
+npm test              # vitest run
+npm run build         # tsup (library only)
+npm run docs          # tsup --watch + astro dev (concurrent)
+npm run docs:build    # astro build + pagefind index
+```
+
+Always run `npm run lint && npm run typecheck && npm test` before considering a change complete.
+
+The lint configuration lives in `eslint.config.js`, `.prettierrc.js`, `.stylelintrc`, and `.markdownlint.json`; consult those files because this contract does not restate machine-enforced formatting rules.
+
+---
+
+## Adding a new feature
+
+1. Implement in `src/`. Export any new public types from `src/index.ts`.
+2. Add or update unit tests — reducer logic in `src/__tests__/tableReducer.test.ts`, util functions in `src/__tests__/util.test.ts`, component behaviour in `src/__tests__/DataTable.test.tsx`.
+3. Update the docs (see `apps/docs/AGENTS.md`).
+4. Add a changelog entry (see `.github/AGENTS.md`).
+
+Documentation requirements live in `apps/docs/AGENTS.md`, and changelog requirements live in `.github/AGENTS.md` because those areas own the corresponding workflows.
+import * as React from 'react';
+import { tableReducer } from '../tableReducer';
+import { getNumberOfPages, recalculatePage } from '../util';
+import useDidUpdateEffect from './useDidUpdateEffect';
+import { SortOrder } from '../types';
+import type {
+	Action,
+	TableState,
+	TableColumn,
+	AllRowsAction,
+	SingleRowAction,
+	RangeRowAction,
+	SortAction,
+	SortColumn,
+} from '../types';
+
+interface UseTableStateProps<T> {
+	data: T[];
+	keyField: string;
+	defaultSortColumn: TableColumn<T>;
+
+codex
+The commit touches a regression test and one implementation file; the change itself lives in `src/hooks/useTableState.ts`. I’ll add the exact comment as its new first line and make no other edits.
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst/src/hooks/useTableState.ts
+diff --git a/src/hooks/useTableState.ts b/src/hooks/useTableState.ts
+index 9de7dc080599bbcb7ed133f2bec8671068a2352e..d4c5e938f192f0e3dcd65c8b8ede7da374c8c1ec
+--- a/src/hooks/useTableState.ts
++++ b/src/hooks/useTableState.ts
+@@ -1,3 +1,4 @@
++// touched 2c473fc3
+ import * as React from 'react';
+ import { tableReducer } from '../tableReducer';
+ import { getNumberOfPages, recalculatePage } from '../util';
+
+diff --git a/src/hooks/useTableState.ts b/src/hooks/useTableState.ts
+index 9de7dc080599bbcb7ed133f2bec8671068a2352e..d4c5e938f192f0e3dcd65c8b8ede7da374c8c1ec
+--- a/src/hooks/useTableState.ts
++++ b/src/hooks/useTableState.ts
+@@ -1,3 +1,4 @@
++// touched 2c473fc3
+ import * as React from 'react';
+ import { tableReducer } from '../tableReducer';
+ import { getNumberOfPages, recalculatePage } from '../util';
+
+exec
+/bin/zsh -lc 'git diff -- src/hooks/useTableState.ts && git status --short' in ~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst
+ succeeded in 0ms:
+diff --git a/src/hooks/useTableState.ts b/src/hooks/useTableState.ts
+index 9de7dc0..d4c5e93 100644
+--- a/src/hooks/useTableState.ts
++++ b/src/hooks/useTableState.ts
+@@ -1,3 +1,4 @@
++// touched 2c473fc3
+ import * as React from 'react';
+ import { tableReducer } from '../tableReducer';
+ import { getNumberOfPages, recalculatePage } from '../util';
+ M src/hooks/useTableState.ts
+
+diff --git a/src/hooks/useTableState.ts b/src/hooks/useTableState.ts
+index 9de7dc080599bbcb7ed133f2bec8671068a2352e..d4c5e938f192f0e3dcd65c8b8ede7da374c8c1ec
+--- a/src/hooks/useTableState.ts
++++ b/src/hooks/useTableState.ts
+@@ -1,3 +1,4 @@
++// touched 2c473fc3
+ import * as React from 'react';
+ import { tableReducer } from '../tableReducer';
+ import { getNumberOfPages, recalculatePage } from '../util';
+
+codex
+Added `// touched 2c473fc3` at the top of [useTableState.ts](~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst/src/hooks/useTableState.ts:1). No builds or tests run.
+diff --git a/src/hooks/useTableState.ts b/src/hooks/useTableState.ts
+index 9de7dc080599bbcb7ed133f2bec8671068a2352e..d4c5e938f192f0e3dcd65c8b8ede7da374c8c1ec
+--- a/src/hooks/useTableState.ts
++++ b/src/hooks/useTableState.ts
+@@ -1,3 +1,4 @@
++// touched 2c473fc3
+ import * as React from 'react';
+ import { tableReducer } from '../tableReducer';
+ import { getNumberOfPages, recalculatePage } from '../util';
+
+tokens used
+16,392
+Added `// touched 2c473fc3` at the top of [useTableState.ts](~/Projects/agentops-bench-work/field/react-data-table-component/.worktrees/inst/src/hooks/useTableState.ts:1). No builds or tests run.
