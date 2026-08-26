@@ -1,0 +1,774 @@
+OpenAI Codex v0.149.1
+--------
+workdir: ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03eb1-601f-7273-8efa-ccdb1d32e4a8
+--------
+user
+A past change to this repository was described as: "Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫ"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 6474332f
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll trace the described change to its single source file, then make only the requested one-line comment edit. I’ll follow the repository’s routing instructions and won’t run builds or tests.
+exec
+/bin/zsh -lc "pwd && sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && sed -n '1,240p' CLAUDE.md && sed -n '1,240p' CONTEXT.md" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+---
+name: using-superpowers
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+---
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill.
+</SUBAGENT-STOP>
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## Instruction Priority
+
+Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+
+1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
+2. **Superpowers skills** — override default system behavior where they conflict
+3. **Default system prompt** — lowest priority
+
+If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+
+## How to Access Skills
+
+**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+
+**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Claude Code's `Skill` tool.
+
+**In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
+
+**In other environments:** Check your platform's documentation for how skills are loaded.
+
+## Platform Adaptation
+
+Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
+
+# Using Skills
+
+## The Rule
+
+**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "About to EnterPlanMode?" [shape=doublecircle];
+    "Already brainstormed?" [shape=diamond];
+    "Invoke brainstorming skill" [shape=box];
+    "Might any skill apply?" [shape=diamond];
+    "Invoke Skill tool" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create TodoWrite todo per item" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
+
+    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
+    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
+    "Invoke brainstorming skill" -> "Might any skill apply?";
+
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create TodoWrite todo per item" -> "Follow skill exactly";
+}
+```
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Skill Priority
+
+When multiple skills could apply, use this order:
+
+1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+
+"Let's build X" → brainstorming first, then implementation skills.
+"Fix this bug" → debugging first, then domain-specific skills.
+
+## Skill Types
+
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+
+**Flexible** (patterns): Adapt principles to context.
+
+The skill itself tells you which.
+
+## User Instructions
+
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+# BizCity Twin AI — Workspace Map
+
+CLASS: MAP · Last updated: 2026-08-26
+
+BizCity Twin AI is a self-hosted, WordPress-native business Second Brain
+that combines Graph RAG, memory, CRM, communication channels, and
+automation. Server-side `bizcity-llm-router` questions belong in that
+separate repository; this repository owns the WordPress client framework
+and its bundled extensions. **CONTEXT.md** (next to this file) routes
+tasks to the right workspace. This file is the map.
+
+## Folder Structure
+
+```
+bizcity-twin-ai/
+├── CLAUDE.md            ← the map (always loaded)
+├── CONTEXT.md           ← the router: task → workspace
+├── AGENTS.md            ← cross-vendor shim (Codex etc.)
+├── bizcity-twin-ai.php  ← plugin entry point / bootstrap
+├── bin/                 ← repository validators and CLI utilities
+├── core/                ← shared WordPress AI framework subsystems
+├── docs/                ← guides, contracts, audits, runbooks, laws.md
+├── examples/            ← public SDK reference-plugin fixture
+├── includes/            ← top-level WordPress bootstrap support
+├── languages/           ← localization catalogs
+├── modules/             ← first-party feature modules (twin*/webchat)
+├── mu-plugin/           ← WordPress must-use plugin integration
+├── packages/            ← standalone framework SDK packages
+├── plugins/             ← first-party WordPress feature plugins
+├── tests/               ← unit, MCP, and fixture test material
+└── tools/               ← repository maintenance utilities
+```
+
+`.github/` carries CI, DCO, release workflows, and repository
+collaboration metadata.
+
+## Quick Navigation
+
+| Want to… | Go here |
+|---|---|
+| Route a task / know what to load | `CONTEXT.md` |
+| Work on a core subsystem | `core/CONTEXT.md` |
+| Work on a feature module | `modules/CONTEXT.md` |
+| Work on a bundled plugin | `plugins/CONTEXT.md` |
+| Pipeline orchestration architecture | `core/intent/docs/PIPELINE-ARCHITECTURE.md` |
+| Framework ownership / public contracts | `docs/framework/FRAMEWORK-GUIDE-v1.md` |
+| Repository boundary & contribution rules | `CONTRIBUTING.md` |
+| Exclusions and STOP rules | `docs/laws.md` |
+
+## Naming & Placement
+
+Derived from this repository's own conventions — follow the cited
+examples when creating a NEW file:
+
+| New body | Place and pattern | Existing examples |
+|---|---|---|
+| PHP class | `<area>/includes/class-<name>.php` | `includes/class-module-loader.php`, `core/memory/includes/class-memory-manager.php` |
+| Core subsystem | `core/<subsystem>/` | `core/memory/`, `core/diagnostics/` |
+| Feature module | `modules/<name>/` with `module.json` | `modules/webchat/module.json` |
+| Feature plugin | `plugins/bizcity-<name>/` | `plugins/bizcity-doc/`, `plugins/bizcity-tool-image/` |
+| Diagnostics probe | `core/diagnostics/includes/probes/class-probe-<topic>.php` | `class-probe-twinweb-customer-channels.php` |
+| Test | `tests/unit/` or `tests/mcp/`; fixtures in `tests/fixtures/` | `tests/bootstrap.php` |
+| Documentation | `docs/<area>/` descriptive name | `docs/framework/FRAMEWORK-GUIDE-v1.md` |
+| Translation | `languages/bizcity-twin-ai-<locale>.po` | `languages/bizcity-twin-ai-vi.po` |
+| Repo validator | `bin/` | `bin/bizcity-manifest-validate.php` |
+
+Automated PHP style enforcement is configured in `phpcs.xml.dist`, and
+repository CI entry points live in `.github/workflows/ci.yml`; those
+files remain the authority for machine-enforced checks.
+
+Excluded from reading (full reasons: `docs/laws.md`): `.git/`,
+`.worktrees/`, `vendor/`, `node_modules/`, generated outputs, runtime
+logs, `tests/_archived/`.
+# BizCity Twin AI — Task Router
+
+**CLAUDE.md** (always loaded) has the folder map and naming rules.
+This file routes you to work. Read the target workspace's CONTEXT.md,
+load only what it names, and skip everything else.
+
+## Task Routing
+
+**HARD RULE: Read ONLY the files this table names for your task, then STOP reading .md files. Every extra file is paid waste.**
+
+| Your Task | Go Here | You'll Also Need |
+|---|---|---|
+| Change a core subsystem (memory, knowledge, intent, diagnostics…) | `core/CONTEXT.md` | `core/twin-core/` if public contracts are touched |
+| Fix a diagnostics probe or fixture | `core/CONTEXT.md` → `core/diagnostics/` | `tests/fixtures/` for probe evidence |
+| Change a feature module (twinchat, twinweb, webchat…) | `modules/CONTEXT.md` | `includes/class-module-loader.php` for load order |
+| Change a bundled plugin (CRM, content, image, Zalo…) | `plugins/CONTEXT.md` | `docs/framework/FRAMEWORK-GUIDE-v1.md` for ownership boundaries |
+| Add a sample/reference plugin per the Twin AI agent standard | `plugins/CONTEXT.md` | `examples/CONTEXT.md` for the public-contract fixture |
+| Change plugin bootstrap or module loading | root `bizcity-twin-ai.php` | `includes/CONTEXT.md` |
+| Change an SDK package | `packages/CONTEXT.md` | `bin/validate-sdk-release.mjs` |
+| Write or fix tests | `tests/CONTEXT.md` | the subsystem under test only |
+| Write documentation | `docs/CONTEXT.md` | — |
+| Update translations | `languages/CONTEXT.md` | — |
+| Run validators / repo maintenance | `bin/CONTEXT.md` | `tools/CONTEXT.md` |
+
+## Workspace Summary
+
+| Workspace | Purpose |
+|---|---|
+| `bin/` | repository validators and command-line utilities |
+| `core/` | shared WordPress AI framework subsystems (25 areas) |
+| `docs/` | guides, contracts, audits, runbooks, reference material |
+| `examples/` | public SDK reference-plugin fixture |
+| `includes/` | top-level WordPress bootstrap support |
+| `languages/` | localization catalogs |
+| `modules/` | first-party feature modules |
+| `mu-plugin/` | WordPress must-use plugin integration |
+| `packages/` | standalone framework SDK packages (PHP + TypeScript) |
+| `plugins/` | first-party WordPress feature plugins |
+| `tests/` | unit, MCP, fixture, and archived test material |
+| `tools/` | repository maintenance utilities |
+
+## Cross-Workspace Flow
+
+```
+bizcity-twin-ai.php → includes/ (bootstrap, module loader) → modules/
+core/twin-core (public contracts + event stream)
+    → implemented by modules/ and plugins/
+    → distributed externally via packages/ SDKs
+    → demonstrated by examples/bizcity-reference-plugin
+    → validated by bin/ (manifest, contract, event-stream validators)
+```
+
+Before public disclosure, contract bypass, or server-side work:
+read the STOP rules in `docs/laws.md`.
+
+codex
+I’m using the `using-superpowers` process skill to ensure the repository-specific workflow is applied before editing. The router identifies this as a sample/reference-plugin task, so I’m limiting further documentation reads to the plugin and examples contexts it names.
+exec
+/bin/zsh -lc "sed -n '1,260p' plugins/CONTEXT.md && sed -n '1,260p' examples/CONTEXT.md" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+# plugins/ — first-party WordPress feature plugins
+
+**HARD RULE: Read ONLY the files this table names for your task, then STOP reading .md files. Every extra file is paid waste.**
+
+Bundled plugins follow the `plugins/bizcity-<name>/` convention and the
+framework's public contracts (`docs/framework/FRAMEWORK-GUIDE-v1.md`).
+Sample plugins per the Twin AI agent standard also start here — see
+`examples/bizcity-reference-plugin` for the public-contract fixture.
+
+## Plugins
+
+| Plugin | Path | What it owns |
+|---|---|---|
+| content creator | `plugins/bizcity-content-creator` | marketing content generation plugin |
+| document | `plugins/bizcity-doc` | document generation plugin |
+| Facebook bot | `plugins/bizcity-facebook-bot` | Facebook Messenger and automation integration |
+| profile | `plugins/bizcity-profile` | business profile plugin and UI |
+| content tool | `plugins/bizcity-tool-content` | content tool surfaces and runtime |
+| image tool | `plugins/bizcity-tool-image` | image, design, profile, and QR studio integration |
+| CRM | `plugins/bizcity-twin-crm` | CRM, lead pipeline, and campaign operations |
+| Zalo BizCity | `plugins/bizcity-zalo-bizcity` | BizCity Zalo integration |
+| Zalo bot | `plugins/bizcity-zalo-bot` | Zalo Bot API and webhook integration |
+| BizCoach | `plugins/bizcoach-pro` | people-profile and collaboration analysis |
+| Google tool | `plugins/bizgpt-tool-google` | Google-backed tool integration |
+
+## What to Load
+
+| Task shape | Load these | Skip these |
+|---|---|---|
+| Change one plugin | that plugin's dir only | sibling plugins |
+| New plugin | this file + `examples/bizcity-reference-plugin` | plugin internals of others |
+| Plugin ↔ core boundary | the plugin + `core/twin-core` contracts | UI assets |
+
+Runtime logs under `plugins/bizcity-facebook-bot/logs/` are operational
+output, not context (see `docs/laws.md`).
+
+## Inputs / Outputs
+
+- Input: framework services from `core/`; contracts from
+  `core/twin-core`.
+- Output: installable feature plugins; contract usage validated by
+  `bin/validate-plugin-contract-registry.mjs`.
+# examples/ — public SDK reference-plugin fixture
+
+**HARD RULE: Read ONLY the files this table names for your task, then STOP reading .md files. Every extra file is paid waste.**
+
+`examples/bizcity-reference-plugin` is the discoverable public-contract
+implementation fixture: the canonical demonstration of how an external
+plugin consumes the framework's public contracts.
+
+## What to Load
+
+| Task shape | Load these | Skip these |
+|---|---|---|
+| Study the plugin standard | `examples/bizcity-reference-plugin` | core internals |
+| Update the fixture | the fixture + `core/twin-core` contracts | bundled `plugins/` |
+
+## Inputs / Outputs
+
+- Input: public contracts (`core/twin-core`) and SDKs (`packages/`).
+- Output: the reference pattern new plugins in `plugins/` follow.
+
+exec
+/bin/zsh -lc "git log --all --oneline --decorate --grep='Added a library of sample plugins' --grep='Bổ sung thư viện plugins mẫ' && git log --all --format='%H%x09%s' -- examples/bizcity-reference-plugin | head -30" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+65c0993 (origin/main, origin/HEAD) Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+7a3c7fd Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+7635e76 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+0f627cb (main) Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+2f74df2 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+46abad7 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+31480ee Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+32a74e0 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+a8d85b2 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+13439ae Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+6474332 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+0772d39 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+651c1a2 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+3d5d380 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+ab1eee5 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+b57dd3a Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+237d9a9 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+1e3babb Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+c7b57d4 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+336e407 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+7135e1b Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+fa400bc Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+e52b927 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+a6b43e3 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+058da44 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+e9bdd6e Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+0bfb931 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+5122226 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+be26a89 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+cba298b Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+796d706 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+9760f93 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+44b0237 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+5aea914 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+28674d4 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+abc8fda Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+1cbb1b4 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+3d0f04a Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+084f165 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+62fae29 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+d651934 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+c9ee27e Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+2cfa3ff Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+1b4f7bb Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+f39ff6b Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+f62a099 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+0c96314 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+70f7cb8 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+896b871 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung plugin bizcity-twin-crm
+05982cf Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+a5caa3c Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+b665740 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung plugin bizcity-twin-crm
+f3c8fc9 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+a1ca07f Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung plugin bizcity-twin-crm
+3d271ff Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+c837861 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+1623fc6 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+f76b0e1 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+4619853 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+e2a694c Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+f613b0d Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+7239571 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+f4689b4 (origin/copilot/alo) Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+30af3bb Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+0344a8d Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+26bbdcc Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+e000829 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+75e0823 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+a1c44b1 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+f583b3f Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+7c3c09e Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+5176dc4 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+8cdbdd1 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+fa0b05a Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+6fc907c Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+851a9bf Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+183a0a6 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+c8b48f3 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+597b36a Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+b142a82 Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+0c96314761dfe0195a9c7ce90a29545f089892c1	Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+
+exec
+/bin/zsh -lc 'git show --no-renames --format=fuller --name-status 6474332 && git status --short' in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+commit 6474332f9dbf512499d42da85c46282b991ec069
+Author:     root <root@103-14-49-160.cprapid.com>
+AuthorDate: Fri Aug 21 13:27:56 2026 +0700
+Commit:     root <root@103-14-49-160.cprapid.com>
+CommitDate: Fri Aug 21 13:27:56 2026 +0700
+
+    Added a library of sample plugins based on the Twin AI agent standard. - Bổ sung thư viện plugins mẫu theo chuẩn Twin AI agentic
+
+M	core/membership/bootstrap.php
+ M modules/webchat/module.json
+ M modules/webchat/templates/pipeline-content-suite.json
+ M plugins/bizcity-tool-content/PLUGIN-STANDARD.md
+ M plugins/bizcity-tool-content/SYSTEM-LOG.md
+ M plugins/bizcity-tool-image/data/accessory-tryon-template.json
+ M plugins/bizcity-tool-image/data/ai-models-template.json
+ M plugins/bizcity-tool-image/data/background-template.json
+ M plugins/bizcity-tool-image/data/clothing-tryon-template.json
+ M plugins/bizcity-tool-image/data/concepts-template.json
+ M plugins/bizcity-tool-image/data/onhand-template.json
+ M plugins/bizcity-tool-image/data/profile-templates-seed.json
+ M plugins/bizcity-tool-image/data/sample-accessories.json
+ M plugins/bizcity-tool-image/data/sample-clothing.json
+
+codex
+The marker `6474332f` resolves directly to the matching historical commit, and that commit changed exactly one file: `core/membership/bootstrap.php`. I also found unrelated existing worktree changes; I’ll leave all of them untouched and edit only that file.
+exec
+/bin/zsh -lc "sed -n '1,240p' core/CONTEXT.md && sed -n '1,24p' core/membership/bootstrap.php" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+# core/ — shared WordPress AI framework subsystems
+
+**HARD RULE: Read ONLY the files this table names for your task, then STOP reading .md files. Every extra file is paid waste.**
+
+Every subsystem lives in its own directory; PHP classes sit in that
+subsystem's `includes/` as `class-<name>.php`. Public contracts and the
+canonical event stream live in `core/twin-core` — cross-subsystem work
+goes through them, never around them.
+
+## Subsystems
+
+| Subsystem | Path | What it owns |
+|---|---|---|
+| agent runtime | `core/agents` | agent bootstrap and contracts |
+| automation | `core/automation` | workflow automation runtime |
+| LLM client | `core/bizcity-llm` | client-side LLM integration and documentation |
+| marketplace | `core/bizcity-market` | marketplace assets, libraries, and templates |
+| channel gateway | `core/channel-gateway` | multi-channel integration and inbox gateway |
+| content operations | `core/content-ops` | shared content operations |
+| cron | `core/cron` | scheduled execution support |
+| diagnostics | `core/diagnostics` | diagnostic probes and schema changelog evidence |
+| helpers | `core/helper` | current shared helpers and UX contracts |
+| legacy helpers | `core/helper-legacy` | legacy helper flows retained for compatibility |
+| intent engine | `core/intent` | intent planning, orchestration, and pipeline architecture |
+| knowledge | `core/knowledge` | knowledge base, KG Hub, and retrieval services |
+| MCP | `core/mcp` | Model Context Protocol integration and REST surfaces |
+| membership | `core/membership` | membership behavior and templates |
+| memory | `core/memory` | persistent memory, migrations, and views |
+| persona | `core/persona` | persona runtime |
+| research | `core/research` | research providers and interfaces |
+| runtime | `core/runtime` | shared runtime wiring |
+| scheduler | `core/scheduler` | scheduling runtime and views |
+| skills | `core/skills` | skill library and skill-management UI |
+| SMTP | `core/smtp` | mail transport integration |
+| tools | `core/tools` | built-in content, distribution, planning, scheduling, video, and workspace tools |
+| Twin core | `core/twin-core` | public contracts and the canonical event stream |
+| TwinBrain | `core/twinbrain` | assistant runtime and tools |
+| core TwinSearch | `core/twinsearch` | shared TwinSearch backend integration |
+
+## What to Load
+
+| Task shape | Load these | Skip these |
+|---|---|---|
+| Change one subsystem | that subsystem's dir only | all sibling subsystems |
+| Fix a diagnostics probe | `core/diagnostics/includes/probes/` | other subsystems; pull `tests/fixtures/` only for evidence |
+| Touch public contracts | the subsystem + `core/twin-core` | UI-only areas |
+| Pipeline/orchestration design | `core/intent/docs/PIPELINE-ARCHITECTURE.md` (single home for plan schema, executor design, lifecycle, integration, async support, rollout record) | unrelated subsystems |
+
+## Inputs / Outputs
+
+- Input: module/plugin feature needs arriving through `core/twin-core`
+  contracts.
+- Output: shared services consumed by `modules/`, `plugins/`, and the
+  SDKs in `packages/`.
+<?php
+/**
+ * @package    Bizcity_Twin_AI
+ * @subpackage Core\Membership
+ * @author     Johnny Chu (Chu Hoàng Anh) <Hoanganh.itm@gmail.com>
+ * @copyright  2024-2026 BizCity — Made in Vietnam 🇻🇳
+ * @license    GPL-2.0-or-later
+ * @link       https://bizcity.vn
+ *
+ * core/membership — Client-side Membership Plans (Free / Pro / Plus / …).
+ *
+ * Self-written, lean core. Lets a CLIENT site define plans, assign them to WP
+ * users, and (later phases) collect money via its OWN PayPal. Membership
+ * revenue is a DIFFERENT money type from the hub LLM credit (R-GW-8) — this
+ * core never calls bizcity-llm-router for billing.
+ *
+ * M1 scope: Plan Registry (CRUD) + assignment (subscriptions table + user_meta)
+ * + admin Users "Plan" column + manual assign on the profile screen.
+ *
+ * See: core/bizcity-llm/docs/MEMBERSHIP-CLIENT-PLANS.md
+ *
+ * @since 2026-06-04 (PHASE-MEMBERSHIP M1)
+ */
+
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31/core/membership/bootstrap.php
+diff --git a/core/membership/bootstrap.php b/core/membership/bootstrap.php
+index 85ad018bf99c90168f71f7f4255e3c20385d8a99..ddab5f03d2339bdfebcc4367dbb2d1e814deb14c
+--- a/core/membership/bootstrap.php
++++ b/core/membership/bootstrap.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 6474332f
+ /**
+  * @package    Bizcity_Twin_AI
+  * @subpackage Core\Membership
+@@ -196,4 +197,3 @@
+ 	}
+ 	return $probes;
+ }, 20 );
+-
+
+diff --git a/core/membership/bootstrap.php b/core/membership/bootstrap.php
+index 85ad018bf99c90168f71f7f4255e3c20385d8a99..ddab5f03d2339bdfebcc4367dbb2d1e814deb14c
+--- a/core/membership/bootstrap.php
++++ b/core/membership/bootstrap.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 6474332f
+ /**
+  * @package    Bizcity_Twin_AI
+  * @subpackage Core\Membership
+@@ -196,4 +197,3 @@
+ 	}
+ 	return $probes;
+ }, 20 );
+-
+
+codex
+The requested PHP comment is now at the top of the identified file, immediately after the opening PHP tag. I’m using the `verification-before-completion` skill for a final diff-only check; this does not run any build or test.
+exec
+/bin/zsh -lc "sed -n '1,260p' ~/.agents/skills/verification-before-completion/SKILL.md" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+---
+name: verification-before-completion
+description: Use when about to claim work is complete, fixed, or passing, before committing or creating PRs - requires running verification commands and confirming output before making any success claims; evidence before assertions always
+---
+
+# Verification Before Completion
+
+## Overview
+
+Claiming work is complete without verification is dishonesty, not efficiency.
+
+**Core principle:** Evidence before claims, always.
+
+**Violating the letter of this rule is violating the spirit of this rule.**
+
+## The Iron Law
+
+```
+NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
+```
+
+If you haven't run the verification command in this message, you cannot claim it passes.
+
+## The Gate Function
+
+```
+BEFORE claiming any status or expressing satisfaction:
+
+1. IDENTIFY: What command proves this claim?
+2. RUN: Execute the FULL command (fresh, complete)
+3. READ: Full output, check exit code, count failures
+4. VERIFY: Does output confirm the claim?
+   - If NO: State actual status with evidence
+   - If YES: State claim WITH evidence
+5. ONLY THEN: Make the claim
+
+Skip any step = lying, not verifying
+```
+
+## Common Failures
+
+| Claim | Requires | Not Sufficient |
+|-------|----------|----------------|
+| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
+| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
+| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
+| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
+| Regression test works | Red-green cycle verified | Test passes once |
+| Agent completed | VCS diff shows changes | Agent reports "success" |
+| Requirements met | Line-by-line checklist | Tests passing |
+
+## Red Flags - STOP
+
+- Using "should", "probably", "seems to"
+- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
+- About to commit/push/PR without verification
+- Trusting agent success reports
+- Relying on partial verification
+- Thinking "just this once"
+- Tired and wanting work over
+- **ANY wording implying success without having run verification**
+
+## Rationalization Prevention
+
+| Excuse | Reality |
+|--------|---------|
+| "Should work now" | RUN the verification |
+| "I'm confident" | Confidence ≠ evidence |
+| "Just this once" | No exceptions |
+| "Linter passed" | Linter ≠ compiler |
+| "Agent said success" | Verify independently |
+| "I'm tired" | Exhaustion ≠ excuse |
+| "Partial check is enough" | Partial proves nothing |
+| "Different words so rule doesn't apply" | Spirit over letter |
+
+## Key Patterns
+
+**Tests:**
+```
+✅ [Run test command] [See: 34/34 pass] "All tests pass"
+❌ "Should pass now" / "Looks correct"
+```
+
+**Regression tests (TDD Red-Green):**
+```
+✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
+❌ "I've written a regression test" (without red-green verification)
+```
+
+**Build:**
+```
+✅ [Run build] [See: exit 0] "Build passes"
+❌ "Linter passed" (linter doesn't check compilation)
+```
+
+**Requirements:**
+```
+✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
+❌ "Tests pass, phase complete"
+```
+
+**Agent delegation:**
+```
+✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
+❌ Trust agent report
+```
+
+## Why This Matters
+
+From 24 failure memories:
+- your human partner said "I don't believe you" - trust broken
+- Undefined functions shipped - would crash
+- Missing requirements shipped - incomplete features
+- Time wasted on false completion → redirect → rework
+- Violates: "Honesty is a core value. If you lie, you'll be replaced."
+
+## When To Apply
+
+**ALWAYS before:**
+- ANY variation of success/completion claims
+- ANY expression of satisfaction
+- ANY positive statement about work state
+- Committing, PR creation, task completion
+- Moving to next task
+- Delegating to agents
+
+**Rule applies to:**
+- Exact phrases
+- Paraphrases and synonyms
+- Implications of success
+- ANY communication suggesting completion/correctness
+
+## The Bottom Line
+
+**No shortcuts for verification.**
+
+Run the command. Read the output. THEN claim the result.
+
+This is non-negotiable.
+
+diff --git a/core/membership/bootstrap.php b/core/membership/bootstrap.php
+index 85ad018bf99c90168f71f7f4255e3c20385d8a99..ddab5f03d2339bdfebcc4367dbb2d1e814deb14c
+--- a/core/membership/bootstrap.php
++++ b/core/membership/bootstrap.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 6474332f
+ /**
+  * @package    Bizcity_Twin_AI
+  * @subpackage Core\Membership
+@@ -196,4 +197,3 @@
+ 	}
+ 	return $probes;
+ }, 20 );
+-
+
+exec
+/bin/zsh -lc 'git diff --check -- core/membership/bootstrap.php && git diff -- core/membership/bootstrap.php && git status --short' in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+diff --git a/core/membership/bootstrap.php b/core/membership/bootstrap.php
+index 85ad018..ddab5f0 100644
+--- a/core/membership/bootstrap.php
++++ b/core/membership/bootstrap.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 6474332f
+ /**
+  * @package    Bizcity_Twin_AI
+  * @subpackage Core\Membership
+@@ -196,4 +197,3 @@ add_filter( 'bizcity_diagnostics_register_probes', static function ( $probes ) {
+ 	}
+ 	return $probes;
+ }, 20 );
+-
+ M core/membership/bootstrap.php
+ M modules/webchat/module.json
+ M modules/webchat/templates/pipeline-content-suite.json
+ M plugins/bizcity-tool-content/PLUGIN-STANDARD.md
+ M plugins/bizcity-tool-content/SYSTEM-LOG.md
+ M plugins/bizcity-tool-image/data/accessory-tryon-template.json
+ M plugins/bizcity-tool-image/data/ai-models-template.json
+ M plugins/bizcity-tool-image/data/background-template.json
+ M plugins/bizcity-tool-image/data/clothing-tryon-template.json
+ M plugins/bizcity-tool-image/data/concepts-template.json
+ M plugins/bizcity-tool-image/data/onhand-template.json
+ M plugins/bizcity-tool-image/data/profile-templates-seed.json
+ M plugins/bizcity-tool-image/data/sample-accessories.json
+ M plugins/bizcity-tool-image/data/sample-clothing.json
+
+diff --git a/core/membership/bootstrap.php b/core/membership/bootstrap.php
+index 85ad018bf99c90168f71f7f4255e3c20385d8a99..ddab5f03d2339bdfebcc4367dbb2d1e814deb14c
+--- a/core/membership/bootstrap.php
++++ b/core/membership/bootstrap.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 6474332f
+ /**
+  * @package    Bizcity_Twin_AI
+  * @subpackage Core\Membership
+@@ -196,4 +197,3 @@
+ 	}
+ 	return $probes;
+ }, 20 );
+-
+

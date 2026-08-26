@@ -1,0 +1,410 @@
+OpenAI Codex v0.149.1
+--------
+workdir: ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+model: gpt-5.6-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: low
+reasoning summaries: none
+session id: 01a03ead-a487-76c3-adc7-0f7f949045a8
+--------
+user
+A past change to this repository was described as: "fix: restore per-plugin diagnostics fixture and probe evidence"
+Find the single file where that change lives and add a one-line comment at the top of that file (using the file's own comment syntax) reading exactly: touched 9acca590
+Make only that one edit. Do not run builds or tests.
+warning: Skill descriptions were shortened to fit the skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+codex
+I’ll locate the change from repository history, verify the target file, and make only the requested one-line edit. I’ll skip builds and tests as instructed.
+exec
+/bin/zsh -lc "sed -n '1,240p' ~/.agents/skills/using-superpowers/SKILL.md && sed -n '1,240p' CLAUDE.md && sed -n '1,240p' CONTEXT.md && sed -n '1,240p' docs/laws.md" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+---
+name: using-superpowers
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+---
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill.
+</SUBAGENT-STOP>
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## Instruction Priority
+
+Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+
+1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
+2. **Superpowers skills** — override default system behavior where they conflict
+3. **Default system prompt** — lowest priority
+
+If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+
+## How to Access Skills
+
+**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+
+**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Claude Code's `Skill` tool.
+
+**In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
+
+**In other environments:** Check your platform's documentation for how skills are loaded.
+
+## Platform Adaptation
+
+Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
+
+# Using Skills
+
+## The Rule
+
+**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "About to EnterPlanMode?" [shape=doublecircle];
+    "Already brainstormed?" [shape=diamond];
+    "Invoke brainstorming skill" [shape=box];
+    "Might any skill apply?" [shape=diamond];
+    "Invoke Skill tool" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create TodoWrite todo per item" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
+
+    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
+    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
+    "Invoke brainstorming skill" -> "Might any skill apply?";
+
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create TodoWrite todo per item" -> "Follow skill exactly";
+}
+```
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Skill Priority
+
+When multiple skills could apply, use this order:
+
+1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+
+"Let's build X" → brainstorming first, then implementation skills.
+"Fix this bug" → debugging first, then domain-specific skills.
+
+## Skill Types
+
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+
+**Flexible** (patterns): Adapt principles to context.
+
+The skill itself tells you which.
+
+## User Instructions
+
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+# BizCity Twin AI — Workspace Map
+
+CLASS: MAP · Last updated: 2026-08-26
+
+BizCity Twin AI is a self-hosted, WordPress-native business Second Brain
+that combines Graph RAG, memory, CRM, communication channels, and
+automation. Server-side `bizcity-llm-router` questions belong in that
+separate repository; this repository owns the WordPress client framework
+and its bundled extensions. **CONTEXT.md** (next to this file) routes
+tasks to the right workspace. This file is the map.
+
+## Folder Structure
+
+```
+bizcity-twin-ai/
+├── CLAUDE.md            ← the map (always loaded)
+├── CONTEXT.md           ← the router: task → workspace
+├── AGENTS.md            ← cross-vendor shim (Codex etc.)
+├── bizcity-twin-ai.php  ← plugin entry point / bootstrap
+├── bin/                 ← repository validators and CLI utilities
+├── core/                ← shared WordPress AI framework subsystems
+├── docs/                ← guides, contracts, audits, runbooks, laws.md
+├── examples/            ← public SDK reference-plugin fixture
+├── includes/            ← top-level WordPress bootstrap support
+├── languages/           ← localization catalogs
+├── modules/             ← first-party feature modules (twin*/webchat)
+├── mu-plugin/           ← WordPress must-use plugin integration
+├── packages/            ← standalone framework SDK packages
+├── plugins/             ← first-party WordPress feature plugins
+├── tests/               ← unit, MCP, and fixture test material
+└── tools/               ← repository maintenance utilities
+```
+
+`.github/` carries CI, DCO, release workflows, and repository
+collaboration metadata.
+
+## Quick Navigation
+
+| Want to… | Go here |
+|---|---|
+| Route a task / know what to load | `CONTEXT.md` |
+| Work on a core subsystem | `core/CONTEXT.md` |
+| Work on a feature module | `modules/CONTEXT.md` |
+| Work on a bundled plugin | `plugins/CONTEXT.md` |
+| Pipeline orchestration architecture | `core/intent/docs/PIPELINE-ARCHITECTURE.md` |
+| Framework ownership / public contracts | `docs/framework/FRAMEWORK-GUIDE-v1.md` |
+| Repository boundary & contribution rules | `CONTRIBUTING.md` |
+| Exclusions and STOP rules | `docs/laws.md` |
+
+## Naming & Placement
+
+Derived from this repository's own conventions — follow the cited
+examples when creating a NEW file:
+
+| New body | Place and pattern | Existing examples |
+|---|---|---|
+| PHP class | `<area>/includes/class-<name>.php` | `includes/class-module-loader.php`, `core/memory/includes/class-memory-manager.php` |
+| Core subsystem | `core/<subsystem>/` | `core/memory/`, `core/diagnostics/` |
+| Feature module | `modules/<name>/` with `module.json` | `modules/webchat/module.json` |
+| Feature plugin | `plugins/bizcity-<name>/` | `plugins/bizcity-doc/`, `plugins/bizcity-tool-image/` |
+| Diagnostics probe | `core/diagnostics/includes/probes/class-probe-<topic>.php` | `class-probe-twinweb-customer-channels.php` |
+| Test | `tests/unit/` or `tests/mcp/`; fixtures in `tests/fixtures/` | `tests/bootstrap.php` |
+| Documentation | `docs/<area>/` descriptive name | `docs/framework/FRAMEWORK-GUIDE-v1.md` |
+| Translation | `languages/bizcity-twin-ai-<locale>.po` | `languages/bizcity-twin-ai-vi.po` |
+| Repo validator | `bin/` | `bin/bizcity-manifest-validate.php` |
+
+Automated PHP style enforcement is configured in `phpcs.xml.dist`, and
+repository CI entry points live in `.github/workflows/ci.yml`; those
+files remain the authority for machine-enforced checks.
+
+Excluded from reading (full reasons: `docs/laws.md`): `.git/`,
+`.worktrees/`, `vendor/`, `node_modules/`, generated outputs, runtime
+logs, `tests/_archived/`.
+# BizCity Twin AI — Task Router
+
+**CLAUDE.md** (always loaded) has the folder map and naming rules.
+This file routes you to work. Read the target workspace's CONTEXT.md,
+load only what it names, and skip everything else.
+
+## Task Routing
+
+**HARD RULE: Read ONLY the files this table names for your task, then STOP reading .md files. Every extra file is paid waste.**
+
+| Your Task | Go Here | You'll Also Need |
+|---|---|---|
+| Change a core subsystem (memory, knowledge, intent, diagnostics…) | `core/CONTEXT.md` | `core/twin-core/` if public contracts are touched |
+| Fix a diagnostics probe or fixture | `core/CONTEXT.md` → `core/diagnostics/` | `tests/fixtures/` for probe evidence |
+| Change a feature module (twinchat, twinweb, webchat…) | `modules/CONTEXT.md` | `includes/class-module-loader.php` for load order |
+| Change a bundled plugin (CRM, content, image, Zalo…) | `plugins/CONTEXT.md` | `docs/framework/FRAMEWORK-GUIDE-v1.md` for ownership boundaries |
+| Add a sample/reference plugin per the Twin AI agent standard | `plugins/CONTEXT.md` | `examples/CONTEXT.md` for the public-contract fixture |
+| Change plugin bootstrap or module loading | root `bizcity-twin-ai.php` | `includes/CONTEXT.md` |
+| Change an SDK package | `packages/CONTEXT.md` | `bin/validate-sdk-release.mjs` |
+| Write or fix tests | `tests/CONTEXT.md` | the subsystem under test only |
+| Write documentation | `docs/CONTEXT.md` | — |
+| Update translations | `languages/CONTEXT.md` | — |
+| Run validators / repo maintenance | `bin/CONTEXT.md` | `tools/CONTEXT.md` |
+
+## Workspace Summary
+
+| Workspace | Purpose |
+|---|---|
+| `bin/` | repository validators and command-line utilities |
+| `core/` | shared WordPress AI framework subsystems (25 areas) |
+| `docs/` | guides, contracts, audits, runbooks, reference material |
+| `examples/` | public SDK reference-plugin fixture |
+| `includes/` | top-level WordPress bootstrap support |
+| `languages/` | localization catalogs |
+| `modules/` | first-party feature modules |
+| `mu-plugin/` | WordPress must-use plugin integration |
+| `packages/` | standalone framework SDK packages (PHP + TypeScript) |
+| `plugins/` | first-party WordPress feature plugins |
+| `tests/` | unit, MCP, fixture, and archived test material |
+| `tools/` | repository maintenance utilities |
+
+## Cross-Workspace Flow
+
+```
+bizcity-twin-ai.php → includes/ (bootstrap, module loader) → modules/
+core/twin-core (public contracts + event stream)
+    → implemented by modules/ and plugins/
+    → distributed externally via packages/ SDKs
+    → demonstrated by examples/bizcity-reference-plugin
+    → validated by bin/ (manifest, contract, event-stream validators)
+```
+
+Before public disclosure, contract bypass, or server-side work:
+read the STOP rules in `docs/laws.md`.
+# Laws — STOP rules and exclusions
+
+CLASS: LAWS · Last updated: 2026-08-26
+
+## Universal STOP rules
+
+- STOP before publicly disclosing a suspected vulnerability because
+  coordinated disclosure protects users; follow `SECURITY.md` for the
+  full reporting policy.
+- STOP before bypassing a framework ownership or public-contract
+  boundary because parallel implementations cause drift; follow
+  `docs/framework/FRAMEWORK-GUIDE-v1.md` for the full workflow.
+- STOP before implementing server-only `bizcity-llm-router` behavior
+  here because this is the WordPress client repository; follow
+  `CONTRIBUTING.md` for the repository boundary and contribution rules.
+
+## Explicit exclusions
+
+- `.git/` is repository metadata, so agents do not treat its internals
+  as product context.
+- `.worktrees/` and harness-managed worktree directories are execution
+  infrastructure, so they are not product areas.
+- `vendor/` and `node_modules/` are third-party dependency caches, so
+  their generated contents are not repository knowledge.
+- `dist/`, `build/`, `coverage/`, and `.cache/` are generated outputs
+  or caches, so their source directories remain the authority.
+- `plugins/bizcity-facebook-bot/logs/`, `error_log`, and other runtime
+  logs are operational output, so they are not context sources.
+- `tests/_archived/` is historical test material, so current test
+  behavior is owned by the active test directories.
+
+An unlisted directory is a gap in this layer, not an ignorable area.
+
+codex
+I’m using the repository’s startup workflow to respect its routing and edit constraints. The requested commit description is specific enough to identify the file directly from Git history without opening unrelated project documentation.
+exec
+/bin/zsh -lc "git log --all --format='%H%x09%s' --fixed-strings --grep='fix: restore per-plugin diagnostics fixture and probe evidence'" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+9acca5900f8e50396cf5074c7dc86c2e4670b922	fix: restore per-plugin diagnostics fixture and probe evidence
+
+exec
+/bin/zsh -lc "git show --stat --oneline --format='%H %s' 9acca5900f8e50396cf5074c7dc86c2e4670b922 && git show --format= --name-only 9acca5900f8e50396cf5074c7dc86c2e4670b922" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+9acca5900f8e50396cf5074c7dc86c2e4670b922 fix: restore per-plugin diagnostics fixture and probe evidence
+
+ .../probes/class-probe-twinweb-customer-channels.php        | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+
+exec
+/bin/zsh -lc "sed -n '1,12p' core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php" in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+<?php
+/**
+ * BizCity Diagnostics - Twin GPT Customer Channels probe.
+ *
+ * DDV evidence for Phase 2 customer My Channels MVP:
+ * - Disk: TwinWeb REST + FE MyChannels markers exist.
+ * - Loader: routes are registered.
+ * - Runtime: guest is denied, app catalog exposes My Channels safely, logged-in
+ *   user payload is owner-scoped and does not expose credentials.
+ *
+ * @package    Bizcity_Twin_AI
+ * @subpackage Core\Diagnostics\Probes
+
+apply patch
+patch: completed
+~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+diff --git a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+index f3475a4ef16a686ef6cd7630098b033671f72ad1..abd1664ba172a02a51610285d801a1dc86246b48
+--- a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
++++ b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 9acca590
+ /**
+  * BizCity Diagnostics - Twin GPT Customer Channels probe.
+  *
+
+diff --git a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+index f3475a4ef16a686ef6cd7630098b033671f72ad1..abd1664ba172a02a51610285d801a1dc86246b48
+--- a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
++++ b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 9acca590
+ /**
+  * BizCity Diagnostics - Twin GPT Customer Channels probe.
+  *
+
+exec
+/bin/zsh -lc 'git diff -- core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php && git status --short' in ~/Projects/agentops-bench-work/field2/bizcity-twin-ai/.worktrees/inst31
+ succeeded in 0ms:
+diff --git a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+index f3475a4..abd1664 100644
+--- a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
++++ b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 9acca590
+ /**
+  * BizCity Diagnostics - Twin GPT Customer Channels probe.
+  *
+ M core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+ M modules/webchat/module.json
+ M modules/webchat/templates/pipeline-content-suite.json
+ M plugins/bizcity-tool-content/PLUGIN-STANDARD.md
+ M plugins/bizcity-tool-content/SYSTEM-LOG.md
+ M plugins/bizcity-tool-image/data/accessory-tryon-template.json
+ M plugins/bizcity-tool-image/data/ai-models-template.json
+ M plugins/bizcity-tool-image/data/background-template.json
+ M plugins/bizcity-tool-image/data/clothing-tryon-template.json
+ M plugins/bizcity-tool-image/data/concepts-template.json
+ M plugins/bizcity-tool-image/data/onhand-template.json
+ M plugins/bizcity-tool-image/data/profile-templates-seed.json
+ M plugins/bizcity-tool-image/data/sample-accessories.json
+ M plugins/bizcity-tool-image/data/sample-clothing.json
+
+diff --git a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+index f3475a4ef16a686ef6cd7630098b033671f72ad1..abd1664ba172a02a51610285d801a1dc86246b48
+--- a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
++++ b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 9acca590
+ /**
+  * BizCity Diagnostics - Twin GPT Customer Channels probe.
+  *
+
+codex
+Added `// touched 9acca590` to the identified file. No builds or tests were run.
+diff --git a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+index f3475a4ef16a686ef6cd7630098b033671f72ad1..abd1664ba172a02a51610285d801a1dc86246b48
+--- a/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
++++ b/core/diagnostics/includes/probes/class-probe-twinweb-customer-channels.php
+@@ -1,4 +1,5 @@
+ <?php
++// touched 9acca590
+ /**
+  * BizCity Diagnostics - Twin GPT Customer Channels probe.
+  *
+
+tokens used
+31,668
+Added `// touched 9acca590` to the identified file. No builds or tests were run.

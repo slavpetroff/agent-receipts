@@ -72,7 +72,19 @@ The mechanism, visible in the logs: the hop tax. A one-shot agent
 swallows a flat 95-line catalog in one read; the 3-layer split makes
 it pay shim → map → router → workspace on every task.
 
-**So the two-regime law, measured:** always-loaded interactive
+We then tried to rescue the split with a discipline arm (v3.1): the
+SAME structure plus one hard rule in every router file — "read ONLY
+the files this table names, then stop reading". Result: 6/6 correct,
+231k → 190,970 tokens (overhead 1.33× → 1.10×; the structure itself
+costs only ~1.5% over flat). It recovered HALF the gap — and still
+FAILED our pre-registered threshold by 970 tokens (0.5%). Thresholds
+are frozen before runs precisely so a near-miss stays a miss. One
+honest correction from this arm: our earlier "wandering evidence"
+list came from a regex over log MENTIONS, not actual reads — the
+real gain is shorter trajectories, and we've corrected the record.
+
+**So the two-regime law, measured — and it survived a rescue
+attempt:** always-loaded interactive
 sessions → the 3-layer split wins (8.6× boot cut). One-shot batch
 runs → the flat thin catalog wins (+56.7% against the split). The
 architecture must match how your agents actually consume the layer —
