@@ -81,12 +81,21 @@ def check(repo: Path, extra_excludes: list[str], require_spine: bool):
             f"routing редове с ≥3 колони: {max(0, len(rows)-1)} (≥3:{ok_tab})")
 
     # L3 — workspace entry points
+    # gitignored dirs are runtime, not workspaces (blago install, 26.08)
+    import subprocess
+    def _ignored(d: Path) -> bool:
+        try:
+            r = subprocess.run(["git", "-C", str(repo), "check-ignore", "-q",
+                                str(d.relative_to(repo))], capture_output=True)
+            return r.returncode == 0
+        except OSError:
+            return False
     missing = []
     workspaces = []
     for d in sorted(repo.iterdir()):
         if not d.is_dir() or d.name in ex or d.name.startswith("."):
             continue
-        if d.is_symlink():
+        if d.is_symlink() or _ignored(d):
             continue
         workspaces.append(d.name)
         if not (d / "CONTEXT.md").exists():
