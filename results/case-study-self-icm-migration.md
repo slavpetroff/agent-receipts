@@ -40,6 +40,23 @@ The boot number alone: at 10 agent sessions/day per engineer, the
 fused layer was charging ~160k tokens/day/engineer before any work
 happened. The funnel fixed that by construction, not by discipline.
 
+## The installer run on two more of our repos (same day)
+
+The rearmed installer + gate migrated two more of our own repos
+(branch-only, content preserved, validator green on both):
+
+| repo | validator | auto-loaded context (before → after) |
+|---|---|---|
+| business repo A (3 workspaces) | 7/7 PASS | 1,255 → 1,043 tokens (1.2×) |
+| business repo B (6 workspaces, 22 task routes) | 7/7 PASS | 11,158 → 8,259 tokens (1.4×) |
+
+The honest pattern — and it matches our navigation matrix: **the
+benefit scales with how fused and fat the root was.** Our worst
+offender (everything in one always-loaded file) gained 8.6×; a repo
+that was already reasonably split gained 1.2×. If your root context
+file is thin and routes properly, this migration buys you structure,
+not tokens — and we'd tell you that before you pay for anything.
+
 ## The honest limits
 
 - Self-run: the operator who built the layer also fixed it.
