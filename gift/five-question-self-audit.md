@@ -9,8 +9,9 @@ every verdict.
    it say WHERE things live and what to SKIP per task — or is it a
    note? Quote the routing lines if they exist.
 2. COVERAGE: list every top-level folder, then check which are
-   mentioned in the root file. Name the unmapped ones — those are
-   invisible to every agent.
+   mentioned in the root file. Name the unmapped ones — each of those
+   costs every future session its own ls/grep rediscovery, and
+   nothing tells the agent what the folder is for or when to skip it.
 3. DECISIONS: find where recorded decisions live (ADRs, decision
    files, comments). Then pick one module and try to answer "why is
    it built this way" ONLY from files. If you can't — say plainly:
