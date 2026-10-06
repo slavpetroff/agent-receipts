@@ -1,0 +1,14 @@
+{
+  "name": "agent-receipts",
+  "description": "The free gifts from the episodes, one plugin each.",
+  "owner": {
+    "name": "Stanislav Petrov"
+  },
+  "plugins": [
+    {
+      "name": "frame",
+      "source": "./",
+      "description": "Write one job of your company the way you do it, as a skill your AI follows on every run."
+    }
+  ]
+}

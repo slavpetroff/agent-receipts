@@ -1,0 +1,8 @@
+{
+  "name": "frame",
+  "displayName": "Frame",
+  "version": "1.0.0",
+  "description": "Write one job of your company the way you do it, as a skill your AI follows on every run.",
+  "author": { "name": "Stanislav Petrov" },
+  "repository": "https://github.com/slavpetroff/agent-receipts"
+}
